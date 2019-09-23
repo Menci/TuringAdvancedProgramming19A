@@ -1,5 +1,5 @@
 # 19 级图灵班《高级程序设计》(上学期）
-中文 | [English](README.md)
+中文 | [英文](README.md)
 
 这是 19 级图灵班《高级程序设计》上学期提交作业使用的 GitHub 仓库，请各位同学 Fork 本仓库到自己的账户下操作，并使用 Pull Request 提交到主仓库。
 
@@ -15,9 +15,17 @@ Hi Menci! You've successfully authenticated, but GitHub does not provide shell a
 Connection to github.com closed.
 ```
 
-（我是图）
+点击 Fork 主仓库到自己的账户：
+
+<center><img src=".readme/fork.png" width="990"></center>
 
 Fork 后打开 `https://github.com/USER/TuringAdvancedProgramming19A`（其中 `USER` 替换为自己的用户名，下同）即可查看自己账户下的仓库。
+
+我们将需要 `git` 命令行工具，使用以下命令在 Ubuntu 中安装它（其它发行版或操作系统请参阅其文档）：
+
+```bash
+sudo apt install git -y
+```
 
 使用以下命令将仓库下载到本地（会在当前目录下创建 `TuringAdvancedProgramming19A` 文件夹）：
 
@@ -42,7 +50,23 @@ git push
 如果出现如下输出，表示推送成功：
 
 ```bash
-（我是输出）
+$ git push
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 2.57 KiB | 97.00 KiB/s, done.
+Total 4 (delta 0), reused 0 (delta 0)
+To github.com:Menci/TuringAdvancedProgramming19A.git
+ + bdd68d8...1efda49 master -> master
 ```
 
-最后，到 GitHub 上创建 Pull Request，你的代码将在被审阅之后合并到主仓库。
+最后，到 GitHub 上点击创建 Pull Request：
+
+<center><img src=".readme/pr1.png" width="995"></center>
+
+在接下来的页面中点击「compare across forks」，并在左边选择主仓库（`Menci/TuringAdvancedProgramming19A`），右边选择你的仓库：
+
+<center><img src=".readme/pr2.png" width="990"></center>
+
+输入标题和正文（可为空）后点击最下方的「Create pull request」即可。你的代码将在被审阅之后合并到主仓库。

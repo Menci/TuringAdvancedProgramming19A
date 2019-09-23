@@ -1,5 +1,5 @@
 # Turing Class 2019's Advanced Programming (first term)
-[中文](README.zh.md) | English
+[Chinese](README.zh.md) | English
 
 This is the GitHub repository for Turing Class 2019's Advanced Programming lecture's tasks. Please fork it to your account and submit to the main repository with Pull Request.
 
@@ -15,9 +15,17 @@ Hi Menci! You've successfully authenticated, but GitHub does not provide shell a
 Connection to github.com closed.
 ```
 
-(I am the picture!)
+Click here to fork the main repository to your account:
+
+<center><img src=".readme/fork.png" width="990"></center>
 
 After forking, open `https://github.com/USER/TuringAdvancedProgramming19A` (replace `USER` with your username, the same below) to view your repository.
+
+We'll need the `git` command-line utility, which can be installed via this command on Ubuntu (on other distributions and systems please refer to its document):
+
+```bash
+sudo apt install git -y
+```
 
 Download the repository to local with this command (A folder named `TuringAdvancedProgramming19A` will be created in current directory):
 
@@ -42,7 +50,23 @@ git push
 You're successful if the output is like this:
 
 ```bash
-(I am the output!)
+$ git push
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 2.57 KiB | 97.00 KiB/s, done.
+Total 4 (delta 0), reused 0 (delta 0)
+To github.com:Menci/TuringAdvancedProgramming19A.git
+ + bdd68d8...1efda49 master -> master
 ```
 
-Finally create a Pull Request to me on GitHub. Your code will be merged to the main repository.
+Finally click here to create a Pull Request to me on GitHub:
+
+<center><img src=".readme/pr1.png" width="995"></center>
+
+Click "compare across forks" in the next page, then choose the main repository (`Menci/TuringAdvancedProgramming19A`) on the left and your repository on the right:
+
+<center><img src=".readme/pr2.png" width="990"></center>
+
+Enter the title and content (can be empty) and click "Create pull request" on the bottom. Your code will be merged to the main repository after a review.
