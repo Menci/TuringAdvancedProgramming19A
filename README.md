@@ -3,7 +3,7 @@
 
 This is the GitHub repository for Turing Class 2019's Advanced Programming lecture's tasks. Please fork it to your account and submit to the main repository with Pull Request.
 
-Firstly, configure the SSH key with GitHub's offcial tutorial[Generating a new SSH key](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) and [Adding a new SSH key to your GitHub account](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account). Execute `ssh git@github.com` and you're successful if the output is like this:
+Firstly, configure the SSH key with GitHub's offcial tutorial [Generating a new SSH key](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) and [Adding a new SSH key to your GitHub account](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account). Execute `ssh git@github.com` and you're successful if the output is like this:
 
 ```
 $ ssh git@github.com
