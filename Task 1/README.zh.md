@@ -35,7 +35,7 @@ uint64_t your_calculate_function(uint64_t a, uint64_t b, char op) {
 实现计算函数后，将你的代码编译为临时的动态库：
 
 ```bash
-$ gcc -O2 -fPIC -shared your_double.c -o /tmp/your_double.so
+$ gcc -O2 -fPIC -shared mydouble.c -o /tmp/your_double.so
 ```
 
 然后，编译 `double-checker`（只需编译一次）：
@@ -51,7 +51,7 @@ $ make
 使用你的动态库运行 `double-checker`（记住将 `your_calculate_function` 替换为你的函数名）：
 
 ```bash
-$ ./bin/double-checker -f your_calculate_function /tmp/your_double.so
+$ ./bin/double-checker -f solve /tmp/your_double.so
 ```
 
 测试结果与你的代码本身都会影响你的成绩。
