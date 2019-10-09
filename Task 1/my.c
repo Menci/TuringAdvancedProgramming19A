@@ -124,42 +124,44 @@ db add(db a, db b) {
 	if(ta == 1 && tb == 1) return INF_P;
 	if(ta == -1 && tb == -1) return INF_N;
 	long long expa = 0, expb = 0, dexp;
-	for(int i = W_FRAC; i < W - 1; ++i) 
+	for(int i = W_FRAC; i < W - 1; ++i) {
 		if(VAL(a.s, i)) expa += BIT(i - W_FRAC);
-	for(int i = W_FRAC; i < W - 1; ++i)
 		if(VAL(b.s, i)) expb += BIT(i - W_FRAC);
+	}
 	if(expa < expb) {
 		db tmp = a;
 		a = b, b = tmp;
 		expa ^= expb, expb ^= expa, expa ^= expb;
 	}
 	dexp = expa - expb;
+	if(expa && (! expb)) --dexp;
 	int inc = 0;
-	uint8_t s[2 * BYTE_SIZE], flg = 0;
+	uint8_t s[3 * BYTE_SIZE], flg = 0;
 	memset(s, 0, sizeof(s));
 	for(int i = 0; i <= W_FRAC; ++i) {
 		if((i < W_FRAC && VAL(a.s, i)) || (i == W_FRAC && expa)) 
-			addition(s, i, W_FRAC + 2);
+			addition(s, i + W_FRAC, 2 * W_FRAC + 2);
 		if((i < W_FRAC && VAL(b.s, i)) || (i == W_FRAC && expb)) {
-			if(i - dexp >= 0) addition(s, i - dexp, W_FRAC + 2);
+			if(i - dexp + W_FRAC >= 0) addition(s, i - dexp + W_FRAC, 2 * W_FRAC + 2);
 			else flg = 1;
 		}
 	}
+	// for(int i = 0; i <= 2 * W_FRAC + 2; ++i) printf("%d", (int)VAL(s, i)); puts("");
 	db c;
 	memset(c.s, 0, sizeof(c.s));
 	uint8_t sgn = (VAL(a.s, W - 1) && VAL(b.s, W - 1));
 	if(sgn) SET(c.s, W - 1);
 	uint8_t flag = 0;
-	if(dexp > 0 && dexp <= W_FRAC && (!VAL(s, W_FRAC + 1))) {
+	if(dexp > 0 && dexp <= W_FRAC && (!VAL(s, W_FRAC + 1 + W_FRAC))) {
 		if(dexp == 1) {
-			if(VAL(s, 0) && VAL(b.s, 0)) flag = 1;
+			if(VAL(s, 0 + W_FRAC) && VAL(b.s, 0)) flag = 1;
 		}
 		else {
-			if(VAL(s, 0)) {
+			if(VAL(s, 0 + W_FRAC)) {
 				if(VAL(b.s, dexp - 1)) flag = 1;
 			}
 			else {
-				if(VAL(b.s, dexp - 1)) {
+				if(dexp - 1 >= 0 && VAL(b.s, dexp - 1)) {
 					for(int i = dexp - 2; i >= 0; --i) {
 						if(VAL(b.s, i)) {
 							flag = 1;
@@ -169,36 +171,65 @@ db add(db a, db b) {
 				}
 			}
 		}
-		if(flag) addition(s, 0, W_FRAC + 2);
+		if(flag) addition(s, 0, W_FRAC + 2 + W_FRAC);
 	}
-	//for(int i = 0; i <= W_FRAC + 1; ++i) printf("%d",(int)VAL(s,i)); puts("");
-	if(VAL(s, W_FRAC + 1)) {
+	if(VAL(s, W_FRAC + 1 + W_FRAC)) {
 		if(expa + 1 >= BIT(W_EXP)) {
 			if(sgn) return INF_N;
 			else return INF_P;
 		}
 		long long exp = expa + 1;
-		uint8_t st = 1, ed = W_FRAC;
-		if(! flag){
-			if(VAL(s, st)) {
-				if(VAL(s, st - 1)) addition(s, st, W_FRAC + 2); 
-			}
-			else {
-				if(VAL(s, st - 1) && flg) addition(s, st, W_FRAC + 2);
+		int st = 1 + W_FRAC, ed = W_FRAC + W_FRAC;
+		uint8_t flg = 0;
+		// puts("HERE");
+		if(st >= 0 && VAL(s, st)) { // Rounding
+			if(st - 1 >= 0 && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
+		}
+		else {
+			if(st - 1 >= 0 && VAL(s, st - 1)) {
+				uint8_t ok = 0;
+				for(int i = st - 2; i >= 0; --i) if(VAL(s, i)) {
+					ok = 1;
+					break;
+				}
+				if(ok && st >= 0) flg += addition(s, st, ed + 1);
 			}
 		}
 		for(int i = 0; i < W_EXP; ++i) if(exp & BIT(i)) SET(c.s, W_FRAC + i);
 		for(int i = st; i <= ed; ++i) if(VAL(s, i)) SET(c.s, i - st);
-		return c;
-	}
-	else {
-		if(expa >= BIT(W_EXP)) {
+		if(exp + 1 >= BIT(W_EXP)) {
 			if(sgn) return INF_N;
 			else return INF_P;
 		}
-		if((!expa) && (!expb) && VAL(s, W_FRAC)) ++expa;
+		return c;
+	}
+	else {
+		if(expa + 1 >= BIT(W_EXP)) {
+			if(sgn) return INF_N;
+			else return INF_P;
+		}
+		int st = 0 + W_FRAC, ed = W_FRAC - 1 + W_FRAC;
+		uint8_t flg = 0;
+		if(st >= 0 && VAL(s, st)) { // Rounding
+			if(st - 1 >= 0 && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
+		}
+		else {
+			if(st - 1 >= 0 && VAL(s, st - 1)) {
+				uint8_t ok = 0;
+				for(int i = st - 2; i >= 0; --i) if(VAL(s, i)) {
+					ok = 1;
+					break;
+				}
+				if(ok && st >= 0) flg += addition(s, st, ed + 1);
+			}
+		}
+		if((!expa) && (!expb) && VAL(s, W_FRAC + W_FRAC)) ++expa;
+		if(expa + 1 >= BIT(W_EXP)) {
+			if(sgn) return INF_N;
+			else return INF_P;
+		}
 		for(int i = 0; i < W_EXP; ++i) if(expa & BIT(i)) SET(c.s, W_FRAC + i);
-		for(int i = 0; i < W_FRAC; ++i) if(VAL(s, i)) SET(c.s, i);
+		for(int i = 0; i < W_FRAC; ++i) if(VAL(s, i + W_FRAC)) SET(c.s, i);
 		return c;
 	}
 }
@@ -220,7 +251,6 @@ db sub(db a, db b) {
 		if(VAL(a.s, i)) expa += BIT(i - W_FRAC);
 		if(VAL(b.s, i)) expb += BIT(i - W_FRAC);
 	}
-	// printf("B4SW: %lld %lld\n", expa, expb);
 	if(expa <= expb) {
 		uint8_t sw = 0;
 		for(int i = W_FRAC - 1; i >= 0; --i) if(VAL(a.s, i) != VAL(b.s, i)) {
@@ -241,8 +271,8 @@ db sub(db a, db b) {
 	if(expa) SET((uint8_t *)(&x), top);
 	if(expb && top + 1 - dexp > 0) SET((uint8_t *)(&y), top - dexp);
 	if(expa && (! expb)) --dexp;
-	printf("expa = %d, expb = %d, dexp = %d, sgn = %d\n", expa, expb, dexp, sgn);
-	if(dexp > W_FRAC) {
+	// printf("expa = %d, expb = %d, dexp = %d, sgn = %d\n", expa, expb, dexp, sgn);
+	if(dexp > W_FRAC + 10) {
 		c = a;
 		if(sgn) SET(c.s, W - 1);
 		else CLEAR(c.s, W - 1);
@@ -256,7 +286,7 @@ db sub(db a, db b) {
 	if(x == 0) return ZERO;
 	uint8_t *s = (uint8_t *) &x;
 	int st, ed;
-	
+	// for(int i = top; i >= 0; --i) printf("%d", (int)VAL(s, i)); puts("");
 	if(!expa) ed = top - 1, st = ed - W_FRAC + 1;
 	else {
 		int pos = -1;
@@ -264,16 +294,20 @@ db sub(db a, db b) {
 			pos = i;
 			break;
 		}
-		if(top - ed >= expa) {
+		//printf("pos = %d! ed = %d\n", pos, ed);
+		if(top - pos >= expa) {
 			ed = top - expa, st = ed - W_FRAC + 1;
 			expa = 0;
 		}
 		else {
-			ed = pos - 1, st = ed - W_FRAC + 1;
-			expa -= top - ed;
+			if(pos != top) {
+				ed = pos - 1, st = ed - W_FRAC + 1;
+				expa -= top - ed - 1; // ?????????
+			}
+			else ed = pos - 1, st = ed - W_FRAC + 1;
 		}
 	}
-	printf("st = %d, ed = %d, delta = %d\n", st, ed, top - ed);
+	// printf("st = %d, ed = %d, delta = %d\n", st, ed, top - ed);
 	uint8_t flg = 0;
 	if(st >= 0 && VAL(s, st)) { // Rounding
 		if(st - 1 >= 0 && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
@@ -289,7 +323,7 @@ db sub(db a, db b) {
 		}
 	}
 	if(! flg) {
-		printf("fexp = %d\n", expa);
+		// printf("fexp = %d\n", expa);
 		for(int i = st; i <= ed; ++i) if(i >= 0 && VAL(s, i)) {
 			SET(c.s, i - st);
 		}
@@ -361,12 +395,10 @@ db mul(const db a, const db b) {
 	// for(int i = W_FRAC; i <= 2 * W_FRAC + 1; ++i)  printf("%d", (int)VAL(s, i)); puts("");
 	uint8_t flag = 0;
 	if(VAL(s, 2 * W_FRAC + 1)) { // 1x.xxxxx
-		//puts("A");
 		if(exp >= 0) ++exp, st = W_FRAC + 1, ed = 2 * W_FRAC;
 		else st = W_FRAC - exp + 1, ed = 2 * W_FRAC - exp;
 	}
 	else if(VAL(s, 2 * W_FRAC)) {// 01.xxxxx
-		//puts("B");
 		if(exp > 0)  st = W_FRAC, ed = 2 * W_FRAC - 1;
 		else if(exp == 0) st = W_FRAC + 1, ed = 2 * W_FRAC;
 		else {
@@ -375,20 +407,15 @@ db mul(const db a, const db b) {
 		}
 	}
 	else { // 00.xxxxx
-		//puts("C");
 		if(exp <= 0) st = W_FRAC - exp + 1, ed = 2 * W_FRAC - exp;
 		else if(exp == 1) st = W_FRAC, ed = 2 * W_FRAC - 1, exp = 0;
 		else {
 			uint8_t ok = 0;
 			int pos = -1;
-			for(int i = 2 * W_FRAC - 1; i >= 0; --i) {
-				//if(2 * W_FRAC - i > exp) break;
-				if(VAL(s, i)) {
-					ok = 1, pos = i;
-					break;
-				}
+			for(int i = 2 * W_FRAC - 1; i >= 0; --i) if(VAL(s, i)) {
+				ok = 1, pos = i;
+				break;
 			}
-			//printf("ok = %d\n", ok);
 			if(ok) {
 				if(2 * W_FRAC - pos <= exp) {
 					if(2 * W_FRAC - pos == exp) ed = pos, st = ed - W_FRAC + 1, exp = 0;
@@ -503,6 +530,7 @@ uint64_t conv(db x) {
 uint64_t calculate(uint64_t a, uint64_t b, char op) {
 	db x = trans(&a), y = trans(&b);
 	db z;
+	// printf("%llx %llx\n", a, b);
 	if(op == '*') {
 		z = mul(x, y);
 	}
@@ -529,13 +557,17 @@ int main() {
 	for(int tim = 1; tim <= cas; ++tim) {
 		// if(tim % 10000 == 0) printf("=========================%d=======================\n", tim);
 		db a, b;
-		double x = 1.17608059e+00, y = 2.49666917e+00;
-		// printf("%.10lf %.10lf\n", x, y);
+		uint64_t xx = 0x000dd7420a33affb, yy = 0x000d85d1972fb775;
+		
+		double x = 1.92480729e-308, y = 1.88056697e-308;
+		*(&x) = *((double *) &xx);
+		*(&y) = *((double *) &yy);
+		printf("%lf %lf\n", x, y);
 		//scanf("%lf%lf",&x,&y);
 		a=convert(x),b=convert(y);
-		// sh(&a), sh(&b);
-		db c = sub(a, b);
-		double z = x - y;
+		sh(&a), sh(&b);
+		db c = add(a, b);
+		double z = x + y;
 		// sh(&c), sh(&z);
 		
 		//sh(&c);
