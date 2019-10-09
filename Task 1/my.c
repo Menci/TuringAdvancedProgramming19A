@@ -487,7 +487,23 @@ db mul(const db a, const db b) {
 }
 
 db div(db a, db b) {
-
+	int8_t ta = getType(a), tb = getType(b);
+	if(ta == 2) return NAN_P;
+	if(ta == -2) return NAN_N;
+	if(tb == 2) return NAN_P;
+	if(tb == -2) return NAN_N;
+	if(ta && tb) return INF_N;
+	if(ta == 1) return VAL(b.s, W - 1) ? INF_N : INF_P;
+	if(ta == -1) return VAL(b.s, W - 1) ? INF_P : INF_N;
+	if(tb == 1) return VAL(a.s, W - 1) ? ZERO_N : ZERO;
+	if(tb == -1) return VAL(a.s, W - 1) ? ZERO : ZERO_N;
+	__int128_t x = 0, y = 0, z;
+	for(int i = 0; i < W_FRAC; ++i) {
+		if(VAL(a.s, i)) x |= BIT(i);
+		if(VAL(b.s, i)) y |= BIT(i);
+	}
+	x >>= 64, z = x % y;
+	
 }
 
 db convert(double x) {
@@ -528,12 +544,7 @@ uint64_t conv(db x) {
 	return ret;
 }
 uint64_t calculate(uint64_t a, uint64_t b, char op) {
-	db x = trans(&a), y = trans(&b);
-	db z;
-	// printf("%llx %llx\n", a, b);
-	if(op == '*') {
-		z = mul(x, y);
-	}
+	db x = trans(&a), y = trans(&b), z;
 	if(op == '+') {
 		if(VAL(x.s, W - 1) && (!VAL(y.s, W - 1))) z = sub(y, getNeg(x));
 		if((!VAL(x.s, W - 1)) && VAL(y.s, W - 1))  z = sub(x, getNeg(y));
@@ -546,6 +557,8 @@ uint64_t calculate(uint64_t a, uint64_t b, char op) {
 		if(VAL(x.s, W - 1) && VAL(y.s, W - 1)) z = sub(x, y);
 		if((!VAL(x.s, W - 1)) && (!VAL(y.s, W - 1))) z = sub(x, y);
 	}
+	if(op == '*') z = mul(x, y);
+	if(op == '/') z = div(x, y);
 	return conv(z);
 }
 
