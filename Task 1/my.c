@@ -114,32 +114,6 @@ uint8_t isNorm(const char *s) {
 	return 0;
 }
 
-
-// db make_double(uint8_t *s, uint8_t st, uint8_t ed, long long exp, uint8_t *res) {
-// 	db c;
-// 	uint8_t t[2 * BYTE_SIZE + 2];
-// 	memcpy(t, s, sizeof(s));
-// 	res = 0;
-// 	uint8_t inc = 0;
-// 	if(VAL(t, st)) {
-// 		if(VAL(t, st - 1)) inc += addition(t, st, ed + 1); 
-// 	}
-// 	else {
-// 		if(VAL(t, st - 1)) {
-// 			uint8_t ok = 0;
-// 			for(int i = st - 2; i >= 0; --i) if(VAL, t, i) {
-// 				ok = 1;
-// 				break;
-// 			}
-// 			if(ok) inc += addition(t, st, ed + 1);
-// 		}
-// 	}
-// 	if(inc) {
-
-// 	}
-// 	return c;
-// }
-
 db add(db a, db b) {
 	int8_t ta = getType(a), tb = getType(b);
 	if(ta == 2 && tb == -2) return NAN_P;
@@ -228,21 +202,6 @@ db add(db a, db b) {
 		return c;
 	}
 }
-/*
-	23:40 2019/10/7
-	鍏充簬涔樻硶鐨勯棶棰橈細
-		鏈€澶х殑denorm * 姣旇緝灏忕殑norm锛�1.9 2.0锛�
-		缁撴灉涓簄orm
-		鍦ㄥ鐞嗕箻娉曠殑鏃跺€欐媶浜嗘暣鏁颁綅鍜屽皬鏁颁綅锛屾帹瀵煎嚭涔樻硶鐨勬祦绋�
-		鐒惰€屾垚涓簄orm浠ュ悗澶氬嚭鏉ヤ竴涓�1锛岄渶瑕佸鐞嗕竴涓�.
-	
-	鍑忔硶鐨勬祦绋嬶細
-		鍜屽姞娉曚竴鏍峰厛瀵归綈
-		纭畾缁撴灉鐨勭鍙凤紝鐒跺悗鎬绘槸瑕佺敤缁濆鍊煎ぇ鐨� - 缁濆鍊煎皬鐨�
-		鍥犱负宸茬粡淇濊瘉浜嗙粷瀵瑰€肩殑澶у皬锛屾墍浠ュ榻愮殑閮ㄥ垎鐩存帴涓€浣嶄竴浣嶅仛鍑忔硶銆�
-		瀵逛簬娌℃湁瀵归綈鐨勯儴鍒嗭紝鍙渶瑕�
-
-*/
 
 db sub(db a, db b) {
 	int8_t ta = getType(a), tb = getType(b);
@@ -251,42 +210,96 @@ db sub(db a, db b) {
 	if(ta == 2 || tb == 2) return NAN_P;
 	if(ta == -2 || tb == -2) return NAN_N;
 	if(ta == 1 && tb == 1 || ta == -1 && tb == -1) return NAN_N;
-	if(ta == 1 && tb == -1) return INF_P;
-	if(ta == -1 && tb == 1) return INF_N;
+	if(ta == 1 || tb == -1) return INF_P;
+	if(ta == -1 || tb == 1) return INF_N; 
+	if(cmpq(b, ZERO) || cmpq(b, ZERO_N)) return a;
+	if(cmpq(a, ZERO) || cmpq(a, ZERO_N)) return getNeg(b);
 	uint8_t sgn = cmple(a, b);
 	long long expa = 0, expb = 0;
 	for(int i = W_FRAC; i < W - 1; ++i) {
-		if(VAL(a.s, i - W_FRAC)) expa += BIT(i - W_FRAC);
-		if(VAL(b.s, i - W_FRAC)) expb += BIT(i - W_FRAC);
+		if(VAL(a.s, i)) expa += BIT(i - W_FRAC);
+		if(VAL(b.s, i)) expb += BIT(i - W_FRAC);
 	}
+	// printf("B4SW: %lld %lld\n", expa, expb);
 	if(expa <= expb) {
 		uint8_t sw = 0;
 		for(int i = W_FRAC - 1; i >= 0; --i) if(VAL(a.s, i) != VAL(b.s, i)) {
 			if(VAL(a.s, i) < VAL(b.s, i)) sw = 1;
-			break; 
+			break;
 		}
 		if(sw || expa < expb) {
 			expa ^= expb, expb ^= expa, expa ^= expb;
-			sgn ^= 1;
 			db c = a;
 			a = b, b = c;
 		}
 	}
+	db c;
+	memset(c.s, 0, sizeof(c.s));
+	if(sgn) SET(c.s, W - 1);
 	__int128_t x = 0, y = 0;
 	int dexp = expa - expb, top = 120;
-	if(expa) SET((uint8_t *)(&x), top + 1);
-	if(expb && top + 1 - dexp > 0) SET((uint8_t *)(&y), top + 1 - dexp);
+	if(expa) SET((uint8_t *)(&x), top);
+	if(expb && top + 1 - dexp > 0) SET((uint8_t *)(&y), top - dexp);
+	if(expa && (! expb)) --dexp;
+	printf("expa = %d, expb = %d, dexp = %d, sgn = %d\n", expa, expb, dexp, sgn);
+	if(dexp > W_FRAC) {
+		c = a;
+		if(sgn) SET(c.s, W - 1);
+		else CLEAR(c.s, W - 1);
+		return c;
+	}
 	for(int i = 0; i < W_FRAC; ++i) {
-		if(VAL(a.s, i)) SET((uint8_t *)(&x), top - i);
-		if(VAL(b.s, i) && top - i - dexp >= 0) SET((uint8_t *)(&y), top - i - dexp); 
+		if(VAL(a.s, i)) SET((uint8_t *)(&x), top - (W_FRAC - i));
+		if(VAL(b.s, i) && top - (W_FRAC - i) - dexp >= 0) SET((uint8_t *)(&y), top - (W_FRAC - i) - dexp); 
 	}
 	x -= y;
 	if(x == 0) return ZERO;
 	uint8_t *s = (uint8_t *) &x;
-	int st = -1, ed = -1;
-	for(int i = top + 1; i >= 0; --i) if(VAL(s, i)) {
-		ed = i;
-		break;
+	int st, ed;
+	
+	if(!expa) ed = top - 1, st = ed - W_FRAC + 1;
+	else {
+		int pos = -1;
+		for(int i = top; i >= 0; --i) if(VAL(s, i)) {
+			pos = i;
+			break;
+		}
+		if(top - ed >= expa) {
+			ed = top - expa, st = ed - W_FRAC + 1;
+			expa = 0;
+		}
+		else {
+			ed = pos - 1, st = ed - W_FRAC + 1;
+			expa -= top - ed;
+		}
+	}
+	printf("st = %d, ed = %d, delta = %d\n", st, ed, top - ed);
+	uint8_t flg = 0;
+	if(st >= 0 && VAL(s, st)) { // Rounding
+		if(st - 1 >= 0 && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
+	}
+	else {
+		if(st - 1 >= 0 && VAL(s, st - 1)) {
+			uint8_t ok = 0;
+			for(int i = st - 2; i >= 0; --i) if(VAL(s, i)) {
+				ok = 1;
+				break;
+			}
+			if(ok && st >= 0) flg += addition(s, st, ed + 1);
+		}
+	}
+	if(! flg) {
+		printf("fexp = %d\n", expa);
+		for(int i = st; i <= ed; ++i) if(i >= 0 && VAL(s, i)) {
+			SET(c.s, i - st);
+		}
+		for(int i = W_FRAC; i < W - 1; ++i) {
+			if(expa & BIT(i - W_FRAC)) SET(c.s, i);
+		}
+		return c;
+	}
+	else {
+
 	}
 	
 }
@@ -445,9 +458,11 @@ db mul(const db a, const db b) {
 	}
 	return c;
 }
+
 db div(db a, db b) {
 
 }
+
 db convert(double x) {
 	db ret;
 	for(int i = 0; i < BYTE_SIZE; ++i) 
@@ -487,10 +502,23 @@ uint64_t conv(db x) {
 }
 uint64_t calculate(uint64_t a, uint64_t b, char op) {
 	db x = trans(&a), y = trans(&b);
+	db z;
 	if(op == '*') {
-		db z = mul(x, y);
-		return conv(z);
+		z = mul(x, y);
 	}
+	if(op == '+') {
+		if(VAL(x.s, W - 1) && (!VAL(y.s, W - 1))) z = sub(y, getNeg(x));
+		if((!VAL(x.s, W - 1)) && VAL(y.s, W - 1))  z = sub(x, getNeg(y));
+		if(VAL(x.s, W - 1) && VAL(y.s, W - 1)) 	z = add(x, y);
+		if((!VAL(x.s, W - 1)) && (!VAL(y.s, W - 1))) z = add(x, y);
+	}
+	if(op == '-') {
+		if(VAL(x.s, W - 1) && (!VAL(y.s, W - 1))) z = add(x, getNeg(y));
+		if((!VAL(x.s, W - 1)) && VAL(y.s, W - 1))  z = add(x, getNeg(y));
+		if(VAL(x.s, W - 1) && VAL(y.s, W - 1)) z = sub(x, y);
+		if((!VAL(x.s, W - 1)) && (!VAL(y.s, W - 1))) z = sub(x, y);
+	}
+	return conv(z);
 }
 
 int main() {
@@ -501,12 +529,13 @@ int main() {
 	for(int tim = 1; tim <= cas; ++tim) {
 		// if(tim % 10000 == 0) printf("=========================%d=======================\n", tim);
 		db a, b;
-		double x = 2.36617694e+00, y = -3.54870860e-309;
+		double x = 1.17608059e+00, y = 2.49666917e+00;
+		// printf("%.10lf %.10lf\n", x, y);
 		//scanf("%lf%lf",&x,&y);
 		a=convert(x),b=convert(y);
 		// sh(&a), sh(&b);
-		db c = mul(a, b);
-		double z = x * y;
+		db c = sub(a, b);
+		double z = x - y;
 		// sh(&c), sh(&z);
 		
 		//sh(&c);
@@ -517,6 +546,6 @@ int main() {
 			sh(&a), sh(&b), sh(&c), sh(&z);
 			exit(0);
 		}
-		else system("clear");
+		// else system("clear");
 	}
 }
