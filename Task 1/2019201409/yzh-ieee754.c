@@ -434,8 +434,8 @@ db mul(const db a, const db b) {
 	return c;
 }
 
-db div(db a, db b) {
-	int8_t ta = getType(a), tb = getType(b);
+db DIVISION(db a, db b) {
+	int ta = getType(a), tb = getType(b);
 	if(ta == 2) return NAN_P;
 	if(ta == -2) return NAN_N;
 	if(tb == 2) return NAN_P;
@@ -445,16 +445,16 @@ db div(db a, db b) {
 	if(ta == -1) return VAL(b.s, W - 1) ? INF_P : INF_N;
 	if(tb == 1) return VAL(a.s, W - 1) ? ZERO_N : ZERO;
 	if(tb == -1) return VAL(a.s, W - 1) ? ZERO : ZERO_N;
-	int expa = 0, expb = 0, exp;
-	uint8_t sgn = VAL(a.s, W - 1) ^ VAL(b.s, W - 1);
+	long long expa = 0, expb = 0, exp;
+	int sgn = VAL(a.s, W - 1) ^ VAL(b.s, W - 1);
 	for(int i = W_FRAC; i < W - 1; ++i) {
 		if(VAL(a.s, i)) expa |= BIT(i - W_FRAC);
 		if(VAL(b.s, i)) expb |= BIT(i - W_FRAC);
 	}
 	exp = expa - expb + BIAS;
 	__int128_t x = 0, y = 0, z;
-	uint8_t *s = &x;
-	uint8_t *t = &y;
+	uint8_t *s = (uint8_t *) &x;
+	uint8_t *t = (uint8_t *) &y;
 	for(int i = 0; i < W_FRAC; ++i) {
 		if(VAL(a.s, i)) x |= BIT(i);
 		if(VAL(b.s, i)) y |= BIT(i);
@@ -464,8 +464,8 @@ db div(db a, db b) {
 	if(expa && (!expb)) --exp;
 	if((!expa) && expb) ++exp;
 	x <<= W;
-	z = x % y, x /= y;
-	
+	z = x % y;
+	x /= y;
 	int st, ed;
 	db c;
 	memset(c.s, 0, sizeof(c.s));
@@ -499,7 +499,6 @@ db div(db a, db b) {
 		else ed = W + (-exp), exp = 0;
 	}
 	st = ed - W_FRAC + 1;
-	printf("%d,%d\n", st, ed);
 	uint8_t flg = 0;
 	if(st >= 0 && st <= 2 * W && VAL(s, st)) { // Rounding
 		if(st - 1 >= 0 && st - 1 <= 2 * W && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
@@ -515,9 +514,10 @@ db div(db a, db b) {
 		}
 	}
 	if(!flg) {
+		// printf("%d %d\n", st, ed);
 		if(exp + 1 >= BIT(W_EXP)) return sgn ? INF_N : INF_P;
 		for(int i = st; i <= ed; ++i)
-			if(i >= 0 && VAL(s, i)) SET(c.s, i - st);
+			if(i >= 0 && i <= W + W_FRAC && VAL(s, i)) SET(c.s, i - st);
 		for(int i = W_FRAC; i < W - 1; ++i) 
 			if(exp & BIT(i - W_FRAC)) SET(c.s, i);
 		return c;
@@ -585,7 +585,7 @@ uint64_t calculate(uint64_t a, uint64_t b, char op) {
 		if((!VAL(x.s, W - 1)) && (!VAL(y.s, W - 1))) z = sub(x, y);
 	}
 	if(op == '*') z = mul(x, y);
-	if(op == '/') z = div(x, y);
+	if(op == '/') z = DIVISION(x, y);
 	return conv(z);
 }
 
@@ -593,22 +593,21 @@ int main() {
 	// freopen("data.in", "r",stdin);
 	// freopen("my.out", "w",stdout);
 	int cas = 1;
-	scanf("%d",&cas);
+	// scanf("%d",&cas);
 	for(int tim = 1; tim <= cas; ++tim) {
 		// if(tim % 10000 == 0) printf("=========================%d=======================\n", tim);
 		db a, b;
-		uint64_t xx = 0x47bf8c35fd8987de, yy = 0xbff31e8df3072a3b;
+		uint64_t xx = 0x11b21dddd1a4b2e7, yy = 0xee4533c48361c678;
 		
-		double x = 1.3e-308, y = 10;
-		// *(&x) = *((double *) &xx);
-		// *(&y) = *((double *) &yy);
-		// printf("%lf %lf\n", x, y);
-		scanf("%lf%lf",&x,&y);
+		double x, y;
+		*(&x) = *((double *) &xx);
+		*(&y) = *((double *) &yy);
+		// scanf("%lf%lf",&x,&y);
 		a=convert(x),b=convert(y);
 		// sh(&a), sh(&b);
-		db c = div(a, b);
+		db c = DIVISION(a, b);
 		double z = x / y;
-		// sh(&c), sh(&z);
+		sh(&c), sh(&z);
 		
 		//sh(&c);
 		// output(c, ','), print6f("%.6lf", z);
@@ -618,6 +617,6 @@ int main() {
 			sh(&a), sh(&b), sh(&c), sh(&z);
 			exit(0);
 		}
-		else system("clear");
+		// else system("clear");
 	}
 }
