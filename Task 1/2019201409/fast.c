@@ -302,7 +302,7 @@ db mul(const db a, const db b) {
 	db c;  //Initialize
 	memset(c.s, 0, sizeof(c.s));
 	if(sgn) SET(c.s, W - 1);
-	long long exp = 0;
+	int exp = 0;
 	__int128_t x = 0, y = 0;
 	for(int i = 0; i < W_FRAC; ++i) {
 		if(VAL(a.s, i)) x |= BIT(i);
@@ -462,7 +462,19 @@ db DIVISION(db a, db b) {
 	}
 	st = ed - W_FRAC + 1;
 	uint8_t flg = 0;
-	ROUND(z > 0);
+	if(st >= 0 && st <= 2 * W && VAL(s, st)) { // Rounding
+		if(st - 1 >= 0 && st - 1 <= 2 * W && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
+	}
+	else {
+		if(st - 1 >= 0 && st - 1 <= 2 * W && VAL(s, st - 1)) {
+			uint8_t ok = 0;
+			for(int i = st - 2; i >= 0; --i) if(VAL(s, i)) {
+				ok = 1;
+				break;
+			}
+			if((ok || z > 0) && st >= 0) flg += addition(s, st, ed + 1);
+		}
+	}
 	if(!flg) {
 		// printf("%d %d\n", st, ed);
 		if(exp + 1 >= BIT(W_EXP)) return sgn ? INF_N : INF_P;
