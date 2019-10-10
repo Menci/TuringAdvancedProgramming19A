@@ -30,19 +30,6 @@ typedef __uint128_t         uint128_t;
             b = tmp;                                                    \
         }
 
-#define Rounding(bitNums)                                               \
-        {                                                               \
-            int delta = (bitNums);                                      \
-            uint128_t lowBits = frac_res & ((VL_1 << delta) - 1);       \
-            if(lowBits > VL_1 << (delta - 1)) {                         \
-                frac_res = (frac_res >> delta) + 1;                     \
-            } else if(lowBits < VL_1 << (delta - 1)) {                  \
-                frac_res >>= delta;                                     \
-            } else {                                                    \
-                frac_res >>= delta;                                     \
-                frac_res += (frac_res & 1);                             \
-            }                                                           \
-        }
 
 typedef struct myDouble {
     data_t data[DOUBLE_SIZE];
@@ -121,6 +108,53 @@ int isDenormalized(const double_t _val) {
     return getExponent(&_val) == 0;
 }
 
+#define Rounding(PRECISION)                                             \
+        {                                                               \
+            int delta = (PRECISION);                                    \
+            uint128_t lowBits = frac_res & ((VL_1 << delta) - 1);       \
+            if(lowBits > VL_1 << (delta - 1)) {                         \
+                frac_res = (frac_res >> delta) + 1;                     \
+            } else if(lowBits < VL_1 << (delta - 1)) {                  \
+                frac_res >>= delta;                                     \
+            } else {                                                    \
+                frac_res >>= delta;                                     \
+                frac_res += (frac_res & 1);                             \
+            }                                                           \
+        }
+
+
+#define AdjustPrecision(PRECISION)                                      \
+        {                                                               \
+            while((frac_res >> (PRECISION)) >= 2) {                     \
+                exp_res += 1;                                           \
+                frac_res >>= 1;                                         \
+            }                                                           \
+            while((frac_res >> (PRECISION)) == 0) {                     \
+                frac_res <<= 1;                                         \
+                exp_res -= 1;                                           \
+            }                                                           \
+        }
+
+
+#define ProcessAnswer(PRECISION)                                        \
+        {                                                               \
+            if(exp_res > DOUBLE_EXP_MAX) {                              \
+                setInf(&result);                                        \
+            } else if(exp_res >= 1 - BIAS) {                            \
+                Rounding(PRECISION);                                    \
+                setExponent(&result, (unsigned)(exp_res + BIAS));       \
+                setFraction(&result, (uint64_t)frac_res);               \
+            } else if(exp_res >= 0 - BIAS - FRAC_SIZE) {                \
+                Rounding(PRECISION + 1 - BIAS - exp_res);               \
+                exp_res = -BIAS;                                        \
+                setExponent(&result, 0u);                               \
+                setFraction(&result, (uint64_t)frac_res);               \
+            } else {                                                    \
+                setZero(&result);                                       \
+            }                                                           \
+        }
+
+
 double_t __add__(double_t a, double_t b) {
     double_t result;
     __initialize__(&result);
@@ -141,12 +175,10 @@ double_t __add__(double_t a, double_t b) {
         return isInf(a) ? a : b;
     }
 
-    int exp_a, exp_b;
-    uint128_t frac_a, frac_b;
-    exp_a = (isDenormalized(a) ? 1 : (int)getExponent(&a)) - BIAS;
-    frac_a = (uint128_t)(getFraction(&a) | ((uint64_t)(1 - isDenormalized(a)) << FRAC_SIZE)) << FRAC_SIZE;
-    exp_b = (isDenormalized(b) ? 1 : (int)getExponent(&b)) - BIAS;
-    frac_b = (uint128_t)(getFraction(&b) | ((uint64_t)(1 - isDenormalized(b)) << FRAC_SIZE)) << FRAC_SIZE;
+    int exp_a = (isDenormalized(a) ? 1 : (int)getExponent(&a)) - BIAS, 
+        exp_b = (isDenormalized(b) ? 1 : (int)getExponent(&b)) - BIAS;
+    uint128_t frac_a = (uint128_t)(getFraction(&a) | ((uint64_t)(1 - isDenormalized(a)) << FRAC_SIZE)) << FRAC_SIZE, 
+              frac_b = (uint128_t)(getFraction(&b) | ((uint64_t)(1 - isDenormalized(b)) << FRAC_SIZE)) << FRAC_SIZE;
 
     if(exp_a == exp_b) {
         if(frac_b > frac_a) {
@@ -165,11 +197,10 @@ double_t __add__(double_t a, double_t b) {
     }
     setSign(&result, getSign(&a));
 
-    int delta = exp_a - exp_b;
-    if(delta >= 128) {
+    if(exp_a - exp_b >= 128) {
         frac_b = 1;
     } else {
-        frac_b = (frac_b >> delta) | (0 != (frac_b & (((uint128_t)1 << delta) - 1)));
+        frac_b = (frac_b >> (exp_a - exp_b)) | (0 != (frac_b & ((VL_1 << (exp_a - exp_b)) - 1)));
     }
 
     int exp_res = exp_a;
@@ -179,28 +210,9 @@ double_t __add__(double_t a, double_t b) {
         setZero(&result);
         return result;
     }
-    if((frac_res >> (FRAC_SIZE * 2)) >= 2) {
-        exp_res += 1;
-        frac_res >>= 1;
-    }
-    while((frac_res >> (FRAC_SIZE * 2)) == 0) {
-        frac_res <<= 1;
-        exp_res -= 1;
-    }
 
-    if(exp_res > DOUBLE_EXP_MAX) {
-        setInf(&result);
-    } else if(exp_res >= 1 - BIAS) {
-        Rounding(FRAC_SIZE);
-        setExponent(&result, (unsigned)(exp_res + BIAS));
-        setFraction(&result, (uint64_t)frac_res);
-    } else if(exp_res >= 0 - BIAS - FRAC_SIZE) {
-        Rounding(FRAC_SIZE + 1 - BIAS - exp_res);
-        setExponent(&result, 0u);
-        setFraction(&result, (uint64_t)frac_res);
-    } else {
-        setZero(&result);
-    }
+    AdjustPrecision(FRAC_SIZE * 2);
+    ProcessAnswer(FRAC_SIZE);
 
     return result;
 }
@@ -228,37 +240,16 @@ double_t __mul__(double_t a, double_t b) {
         return result;
     }
 
-    int exp_a, exp_b;
-    uint64_t frac_a, frac_b;
-    exp_a = (isDenormalized(a) ? 1 : (int)getExponent(&a)) - BIAS;
-    frac_a = getFraction(&a) | ((uint64_t)(1 - isDenormalized(a)) << FRAC_SIZE);
-    exp_b = (isDenormalized(b) ? 1 : (int)getExponent(&b)) - BIAS;
-    frac_b = getFraction(&b) | ((uint64_t)(1 - isDenormalized(b)) << FRAC_SIZE);
+    int exp_a = (isDenormalized(a) ? 1 : (int)getExponent(&a)) - BIAS, 
+        exp_b = (isDenormalized(b) ? 1 : (int)getExponent(&b)) - BIAS;
+    uint64_t frac_a = getFraction(&a) | ((uint64_t)(1 - isDenormalized(a)) << FRAC_SIZE), 
+             frac_b = getFraction(&b) | ((uint64_t)(1 - isDenormalized(b)) << FRAC_SIZE);
 
     int exp_res = exp_a + exp_b;
     uint128_t frac_res = (uint128_t)frac_a * frac_b;
-    if((frac_res >> (FRAC_SIZE * 2)) >= 2) {
-        frac_res >>= 1;
-        exp_res += 1;
-    }
-    while((frac_res >> (FRAC_SIZE * 2)) == 0) {
-        frac_res <<= 1;
-        exp_res -= 1;
-    }
-
-    if(exp_res > DOUBLE_EXP_MAX) {
-        setInf(&result);
-    } else if(exp_res >= 1 - BIAS) {
-        Rounding(FRAC_SIZE);
-        setExponent(&result, (unsigned)(exp_res + BIAS));
-        setFraction(&result, (uint64_t)frac_res);
-    } else if(exp_res >= 0 - BIAS - FRAC_SIZE) {
-        Rounding(FRAC_SIZE + 1 - BIAS - exp_res);
-        setExponent(&result, 0u);
-        setFraction(&result, (uint64_t)frac_res);
-    } else {
-        setZero(&result);
-    }
+    
+    AdjustPrecision(FRAC_SIZE * 2);
+    ProcessAnswer(FRAC_SIZE);
 
     return result;
 }
@@ -272,49 +263,27 @@ double_t __div__(double_t a, double_t b) {
         setNan(&result);
         return result;
     }
-    if(isInf(a) && isZero(b)) {
+    if(isInf(a)) {
         setInf(&result);
         return result;
     }
-    if(isZero(a) && isInf(b)) {
+    if(isZero(a)) {
         setZero(&result);
         return result;
     }
 
-    int exp_a, exp_b;
-    uint128_t frac_a, frac_b;
-    exp_a = (isDenormalized(a) ? 1 : (int)getExponent(&a)) - BIAS;
-    frac_a = getFraction(&a) | ((uint64_t)(1 - isDenormalized(a)) << FRAC_SIZE);
-    exp_b = (isDenormalized(b) ? 1 : (int)getExponent(&b)) - BIAS;
-    frac_b = getFraction(&b) | ((uint64_t)(1 - isDenormalized(b)) << FRAC_SIZE);
+    int exp_a = (isDenormalized(a) ? 1 : (int)getExponent(&a)) - BIAS, 
+        exp_b = (isDenormalized(b) ? 1 : (int)getExponent(&b)) - BIAS;
+    uint128_t frac_a = getFraction(&a) | ((uint64_t)(1 - isDenormalized(a)) << FRAC_SIZE), 
+              frac_b = getFraction(&b) | ((uint64_t)(1 - isDenormalized(b)) << FRAC_SIZE);
 
     frac_a <<= FRAC_SIZE + DIV_EXTRA_SIZE - 1;
 
     int exp_res = exp_a - exp_b;
-    uint128_t frac_res = frac_a / frac_b;
-    frac_res = (frac_res << 1) | (frac_a % frac_b != 0);
-    while((frac_res >> (FRAC_SIZE + DIV_EXTRA_SIZE)) >= 2) {
-        frac_res >>= 1;
-        exp_res += 1;
-    }
-    while((frac_res >> (FRAC_SIZE + DIV_EXTRA_SIZE)) == 0) {
-        frac_res <<= 1;
-        exp_res -= 1;
-    }
-
-    if(exp_res > DOUBLE_EXP_MAX) {
-        setInf(&result);
-    } else if(exp_res >= 1 - BIAS) {
-        Rounding(DIV_EXTRA_SIZE);
-        setExponent(&result, (unsigned)(exp_res + BIAS));
-        setFraction(&result, (uint64_t)frac_res);
-    } else if(exp_res >= 0 - BIAS - FRAC_SIZE) {
-        Rounding(DIV_EXTRA_SIZE + 1 - BIAS - exp_res);
-        setExponent(&result, 0u);
-        setFraction(&result, (uint64_t)frac_res);
-    } else {
-        setZero(&result);
-    }
+    uint128_t frac_res = ((frac_a / frac_b) << 1) | (frac_a % frac_b != 0);
+    
+    AdjustPrecision(FRAC_SIZE + DIV_EXTRA_SIZE);
+    ProcessAnswer(DIV_EXTRA_SIZE);
 
     return result;
 }
