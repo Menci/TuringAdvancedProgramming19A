@@ -236,7 +236,7 @@ struct My_Double Sub(struct My_Double a, struct My_Double b)
 	}
 }
 
-unsigned long long Fast_Mul(unsigned long long a,unsigned long long b, int *flag,int *flag2)
+unsigned long long Fast_Mul(unsigned long long a,unsigned long long b, int *flag,int *flag2,int ws)
 {
 	*flag2=0;
 	__int128 t, one = 1;
@@ -248,13 +248,15 @@ unsigned long long Fast_Mul(unsigned long long a,unsigned long long b, int *flag
     for(len_t = 0;(one << len_t) <= t;len_t ++);
     if(len_t > len_a + len_b - 1) *flag = 1;
     else *flag = 0;
+    int ww = 0;
+    if(ws + *flag == 0 && (t>>(len_t - 53)) >= (1ull<<BITS_OF_FRAC)) ww = 1;
 	int i, f1 = 0,f2 = 0,f3= 1 ,j;
-    for(i = len_t - 54;i >= 0;i --){
-    	if(i == len_t - 54 && isone(t, i)) f1 = 1;
-    	else if(i != len_t - 54 && isone(t, i)) f2 = 1, f3 = 0;
+    for(i = len_t - 54 + ww;i >= 0;i --){
+    	if(i == len_t - 54 + ww&& isone(t, i)) f1 = 1;
+    	else if(i != len_t - 54 + ww&& isone(t, i)) f2 = 1, f3 = 0;
     }
-    frac_t = t >> (len_t - 53);
-	if((f1&&f3&&isone(t,len_t - 53))||(f1&&f2)){
+    frac_t = t >> (len_t - 53 + ww);
+	if((f1&&f3&&isone(t,len_t - 53 + ww))||(f1&&f2)){
 		frac_t ++;
 		*flag2 = 1;
 	}
@@ -268,31 +270,38 @@ struct My_Double Mul(struct My_Double a, struct My_Double b)
 	struct My_Double t;
 	Clear_My_Double(&t);
 	int sgn_t=0, sgn_a, sgn_b;
-	int exp_t, exp_a, exp_b;
+	int exp_t, exp_a, exp_b,zj_a,zj_b;
 	int flag = 0,flag2;
 	unsigned long long frac_t, frac_a, frac_b;
 	if(Greater_Than_Zero(a) == 0) sgn_t ^= 1;
 	if(Greater_Than_Zero(b) == 0) sgn_t ^= 1;
     My_Double_to_number(a, &sgn_a, &exp_a, &frac_a);
     My_Double_to_number(b, &sgn_b, &exp_b, &frac_b);
-    exp_t = exp_a + exp_b - BIAS;
-    if(exp_a == 0) exp_t -=1;
-    if(exp_b == 0) exp_t -=1;
     if(exp_a) frac_a += (1ull << BITS_OF_FRAC);
+    else{
+    	zj_a = 0;
+    	while(exp_a>=-1083&&(frac_a<<zj_a)<(1ull<<BITS_OF_FRAC)) zj_a++,exp_a --;
+    	exp_a ++;
+    }
     if(exp_b) frac_b += (1ull << BITS_OF_FRAC);
-    frac_t = Fast_Mul(frac_a, frac_b, &flag,&flag2);
-    //exp_t += flag;
-    printf("%d %d %d %d\n",exp_a,exp_b,exp_t,flag);
-    printf("%d\n",exp_t);
+    else{
+    	zj_b = 0;
+		while(exp_b>=-1083&&(frac_b<<zj_b)<(1ull<<BITS_OF_FRAC)) zj_b++,exp_b --;
+		exp_b ++;
+	}
+    exp_t = exp_a + exp_b - BIAS;
+    frac_t = Fast_Mul(frac_a, frac_b, &flag,&flag2, exp_t);
+    exp_t += flag;
     if(exp_t >= 2047){
 		exp_t = 2047;
     	frac_t = 0;
     	return number_to_My_Double(sgn_t,exp_t,frac_t);
     }
     if(exp_t < 0){
-		if(exp_t < -63){
+		if(exp_t < -53){
     		exp_t = 0;
     		frac_t = 0;
+			return number_to_My_Double(sgn_t,exp_t,frac_t);
     	}
     	else{
     		frac_t -= flag2;
@@ -304,7 +313,7 @@ struct My_Double Mul(struct My_Double a, struct My_Double b)
 	    	if(isone(frac_t,-exp_t+1)) f2 = 1;
 	    	frac_t >>= (-exp_t+1);
 	    	exp_t = 0;
-	    	if((f1 && f4) || (f1 && f3 &&f2)) frac_t++;
+	    	if((f1 && f4) || (f1 && f3 )) frac_t++;
 	    }
     }
     if(frac_t >= (1ull << BITS_OF_FRAC)){
@@ -314,9 +323,9 @@ struct My_Double Mul(struct My_Double a, struct My_Double b)
     return number_to_My_Double(sgn_t, exp_t, frac_t);
 }
 
-unsigned long long Fast_Div(unsigned long long a, unsigned long long b, int *flag){
+unsigned long long Fast_Div(unsigned long long a, unsigned long long b, int *flag, int *flag2,int ws){
 	__int128 t, one = 1,hht;
-	unsigned long long len_a, len_b, len_t,frac_t;
+	long long len_a, len_b, len_t,frac_t;
     for(len_a = 0;(1ull << len_a) <= a;len_a ++);
     for(len_b = 0;(1ull << len_b) <= b;len_b ++);
 	t = a;
@@ -326,13 +335,18 @@ unsigned long long Fast_Div(unsigned long long a, unsigned long long b, int *fla
     for(len_t = 0;(one << len_t) <= t;len_t ++);
     if(len_t < len_a - len_b + 61) *flag = 1;
     else *flag = 0;
+    int ww = 0;
+    if(ws - *flag == 0 && (t>>(len_t - 53)) >= (1ull<<BITS_OF_FRAC)) ww = 1;
 	int i, f1 = 0,f2 = 0,f3= 1 ,j;
-    for(i = len_t - 54;i >= 0;i --){
-    	if(i == len_t - 54 && isone(t, i)) f1 = 1;
-    	else if(i != len_t - 54 && isone(t, i)) f2 = 1, f3 = 0;
+    for(i = len_t - 54 + ww;i >= 0;i --){
+    	if(i == len_t - 54 + ww&& isone(t, i)) f1 = 1;
+    	else if(i != len_t - 54 + ww&& isone(t, i)) f2 = 1, f3 = 0;
     }
-    frac_t = t >> (len_t - 53);
-	if((f1&&f3&&isone(t,len_t - 53))||(f1&&f2)||(f1&&(hht%b!=0))) frac_t ++;
+    if(len_t - 53 + ww > 0) frac_t = t >> (len_t - 53 + ww);
+	if((f1&&f3&&isone(t,len_t - 53 + ww))||(f1&&f2)||(f1&&(hht%b!=0))){
+		*flag2 = 1;
+		frac_t ++;
+	}
     return frac_t;
 }
 struct My_Double Div(struct My_Double a, struct My_Double b)
@@ -343,26 +357,38 @@ struct My_Double Div(struct My_Double a, struct My_Double b)
 	Clear_My_Double(&t);
 	int sgn_t=0, sgn_a, sgn_b;
 	int exp_t, exp_a, exp_b;
-	int flag = 0,flag2 = 0;
+	int flag = 0,flag2 = 0, zj_a, zj_b;
 	unsigned long long frac_t, frac_a, frac_b;
 	if(Greater_Than_Zero(a) == 0) sgn_t ^= 1;
 	if(Greater_Than_Zero(b) == 0) sgn_t ^= 1;
     My_Double_to_number(a, &sgn_a, &exp_a, &frac_a);
     My_Double_to_number(b, &sgn_b, &exp_b, &frac_b);
-    exp_t = exp_a - exp_b + BIAS;
     if(exp_a) frac_a += (1ull << BITS_OF_FRAC);
+    else{
+    	zj_a = 0;
+    	while(exp_a >= -1083 && (frac_a << zj_a) < (1ull << BITS_OF_FRAC)) zj_a ++, exp_a --;
+    	frac_a <<= zj_a;
+    	exp_a ++;
+    }
     if(exp_b) frac_b += (1ull << BITS_OF_FRAC);
-    frac_t = Fast_Div(frac_a, frac_b, &flag);
+    else{
+    	zj_b = 0;
+		while(exp_b >= -1083 && (frac_b << zj_b) < (1ull << BITS_OF_FRAC)) zj_b ++, exp_b --;
+		exp_b ++;
+	}
+    exp_t = exp_a - exp_b + BIAS;
+    frac_t = Fast_Div(frac_a, frac_b, &flag, &flag2, exp_t);
     exp_t -= flag;
     if(exp_t >= 2047){
     	exp_t = 2047;
     	frac_t = 0;
-    	return t;
+		return number_to_My_Double(sgn_t,exp_t,frac_t);
     }
 	if(exp_t < 0){
-		if(exp_t < -63){
+		if(exp_t < -53){
     		exp_t = 0;
     		frac_t = 0;
+			return number_to_My_Double(sgn_t,exp_t,frac_t);
     	}
     	else{
     		frac_t -= flag2;
@@ -374,10 +400,13 @@ struct My_Double Div(struct My_Double a, struct My_Double b)
 	    	if(isone(frac_t,-exp_t+1)) f2 = 1;
 	    	frac_t >>= (-exp_t+1);
 	    	exp_t = 0;
-	    	if((f1 && f4) || (f1 && f3 &&f2)) frac_t++;
+	    	if((f1 && f4) || (f1 && f3)) frac_t++;
 	    }
     }
-    if(frac_t >= (1ull << BITS_OF_FRAC)) frac_t -= (1ull << BITS_OF_FRAC);
+    if(frac_t >= (1ull << BITS_OF_FRAC)){
+    	if(!exp_t) exp_t = 1;
+		frac_t -= (1ull << BITS_OF_FRAC);
+	}
     return number_to_My_Double(sgn_t, exp_t, frac_t);
 }
 
@@ -404,7 +433,7 @@ int input(struct My_Double* a)
 	else return 0;
 }
 
-unsigned long long your_calculate_function(unsigned long long a,unsigned long long b,char op){
+unsigned long long double_checker_calc(unsigned long long a,unsigned long long b,char op){
 	static bool initialized = false;
 	if(!initialized){
 		Load();
@@ -431,62 +460,17 @@ unsigned long long your_calculate_function(unsigned long long a,unsigned long lo
 	}
 	return My_Double_to_ull(ans);
 }
-void ejz(double a){
-	unsigned long long i=0,w;
-	memcpy(&w,&a,sizeof(double));
-	for(i=63;i>=0;i--){
-		if(isone(w,i)) putchar('1');
-		else putchar('0');
-		if(i==0) break;
-	}
-	puts("");
-}
 int main()
 {
-	/*inf-inf nan
-	  inf+inf inf
-	  nan+??? nan
-	  
-	*/
     Load();
-    unsigned long long l=0x8003783ef8a188d5 ,r=0x5ab5b67d3b158409,w;
+    unsigned long long l = 0x00001a42b059dce5, r = 0x400c02ca9f2e5b95, w;
     double ll,rr,sav;
     memcpy(&ll,&l,sizeof(double));
     memcpy(&rr,&r,sizeof(double));
-    w=your_calculate_function(l,r,'*');
-    memcpy(&sav,&w,sizeof(double));
-    ejz(sav);
-    ejz(ll*rr);
-    printf("%.1000lf\n",your_calculate_function(l,r,'*'));
-    printf("%.1000lf\n",ll*rr);
+    printf("%.1000lf\n",double_checker_calc(l,r,'/'));
+    printf("%.1000lf\n",ll/rr);
 	struct My_Double a, b, ans;
 	double ans2;
 	char symbol;
-	while(input(&a)){
-		scanf("%c",&symbol);
-		input(&b);
-		switch(symbol){
-			case '+':
-				ans = Add(a, b);
-				ans2 = My_Double_to_double(a) + My_Double_to_double(b);
-				break;
-			case '-':
-				ans = Sub(a, b);
-				ans2 = My_Double_to_double(a) - My_Double_to_double(b);
-				break;
-			case '*':
-				ans = Mul(a, b);
-				ans2 = My_Double_to_double(a) * My_Double_to_double(b);
-				break;
-			case '/':
-				ans = Div(a, b);
-				ans2 = My_Double_to_double(a) / My_Double_to_double(b);
-				break;
-			default:
-				break;
-		}
-		printf("%.50lf\n", My_Double_to_double(ans));
-		printf("%.50lf\n",My_Double_to_double(a)*My_Double_to_double(b));
-	}
 	return 0;
 }
