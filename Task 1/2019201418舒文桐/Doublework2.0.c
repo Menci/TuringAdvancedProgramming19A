@@ -7,76 +7,87 @@
 #define ul unsigned long long
 #define uc unsigned char
 const int bias=1023;
-const unsigned long long DB=(ul)1<<52;
+const unsigned long long DDB=(ul)1<<52;
 const __int128 HH=(ul)1<<52;;
+const ul TL=(ul)1<<63;
+const ul G2=(ul)1<<11;
 //干掉常量 
 struct  Double
 {
-	//unsigned char A[8];
-	ui s,Exp;
-	ul Frac;
+	ul W;
+	//ui s,Exp;
+	//ul Frac;
 };
-int Mul[131],cnt,dp;
+int cnt,dp;
 struct  Double NaN,INF,ZERO;
+ui S(struct  Double x)
+{
+	return (x.W>>63)&1;
+}
+ui Exp(struct Double x)
+{
+	ui ans=x.W>>52;
+	if(ans>=G2) ans-=G2;
+	return ans;
+}
+ul Frac(struct Double x)
+{
+	ul ans=x.W-((x.W>>52)<<52);
+	if(Exp(x)) ans+=DDB;
+	return ans;
+}
 int min(int a,int b)
 {
 	return a<b?a:b;
 }
 int check0(struct Double a)
 {
-	if(!a.Exp&&!a.Frac) return 1;
-	if(!a.Exp&&a.Frac==DB)
+	if(!Exp(a)&&!Frac(a)) 
 		return 1;
 	else
 		return 0;
 }
 int checkdem(struct Double a)
 {
-	if(!a.Exp&&a.Frac)
+	if(!Exp(a)&&Frac(a))
 		return 1;
 	else 
 		return 0;
 }
 int checkinf(struct Double a)
 {
-	if(a.Exp==2047&&a.Frac==DB)
+	if(Exp(a)==2047&&!Frac(a))
 		return 1;
 	else
 		return 0;
 }
 int checknan(struct Double a)
 {
-	if(a.Exp==2047&&a.Frac!=DB)
+	if(Exp(a)==2047&&Frac(a))
 		return 1;
 	else
 		return 0;
 }
-struct  Double build(ui s,ui Exp,ul Frac){
+struct  Double build(ui s,ui exp,ul frac){
 	struct  Double X;
-	X.s=s,X.Exp=Exp,X.Frac=Frac;
+	if(frac>=DDB) frac-=DDB;
+	X.W=s;
+	X.W=(X.W<<11)+exp;
+	X.W=(X.W<<52)+frac;
 	return X;
 }
-struct  Double build1(ui s,ui Exp,ul Frac){
-	struct  Double X;
-	X.s=s,X.Exp=Exp,X.Frac=Frac;
-	if(!Exp&&Frac!=DB) X.Frac-=DB;
-	return X;
-}
+
+
 struct Double trans(uint64_t x)
 {
-	ui s,Exp; ul Frac;
-	Frac=(ul)(x-((x>>52)<<52));
-	Frac+=DB;
-	x>>=52;
-	Exp=(ui)(x-((x>>11)<<11));
-	x>>=11;
-	s=(ui)x;
-	return build1(s,Exp,Frac);
+	struct Double X;
+	X.W=(ul)x;
+	return X;
 }
 void init(){
-	NaN=build(0,2047,(ul)1+DB);
-	INF=build(0,2047,DB);
-	ZERO=build(0,0,DB);
+	NaN=build(0,2047,1);
+	INF=build(0,2047,0);
+	ZERO=build(0,0,0);
 }
 
 int Len( __int128 x )
@@ -169,8 +180,8 @@ __int128 Round(__int128 C,int *E){
 }
 int getE(struct Double a)
 {
-	if(a.Exp) 
-		return ((int)a.Exp) - bias;
+	if(Exp(a)) 
+		return ((int)Exp(a)) - bias;
 	else
 		return 1-bias;
 }
@@ -191,30 +202,30 @@ struct  Double mul(struct  Double a,struct  Double b){
 	if(checkinf(b)&&check0(a)) return NaN;
 	if(checkinf(a))
 	{
-		a.s^=b.s;
+		a.W^=((ul)S(b)<<63);
 		return a;
 	}
 	if(checkinf(b))
 	{
-		b.s^=a.s;
+		b.W^=((ul)S(a)<<63);
 		return b;
 	}
 	if(check0(a))
 	{
-		a.s^=b.s;
+		a.W^=((ul)S(b)<<63);
 		return a;
 	}
 	if(check0(b))
 	{
-		b.s^=a.s;
+		b.W^=((ul)S(a)<<63);
 		return b;
 	}
 
 	
-	ui s=a.s^b.s;
+	ui s=S(a)^S(b);
 	int aE=getE(a)-52,bE=getE(b)-52;
 	int E=aE+bE;
-	__int128 cFrac=Mmul(a.Frac,b.Frac,&E);
+	__int128 cFrac=Mmul(Frac(a),Frac(b),&E);
 	if(cFrac<0) cFrac=-cFrac;
 	if(E>1023)  return INF;
 	return build(s,E+bias,(ul)cFrac);
@@ -242,8 +253,8 @@ struct  Double add(struct  Double a,struct  Double b){
 	if(aE-bE>65) return a; 
 	cE=bE;
 	__int128 A,B,C;
-	A=a.Frac;A=A<<(aE-bE); B=b.Frac;
-	if(a.s) A=-A; if(b.s) B=-B;
+	A=Frac(a);A=A<<(aE-bE); B=Frac(b);
+	if(S(a)) A=-A; if(S(b)) B=-B;
 	C=A+B;
 	s=C<0?1:0;
 	if(C<0)C=-C;
@@ -254,6 +265,7 @@ struct  Double add(struct  Double a,struct  Double b){
 }
 struct  Double sub(struct  Double a,struct  Double b){
 //特判
+
 	if(checknan(a)) return a;
 	if(checknan(b)) return b;
 	if(checkinf(a)&&checkinf(b)) return NaN;
@@ -261,7 +273,7 @@ struct  Double sub(struct  Double a,struct  Double b){
 	if(checkinf(b)) return b;
 	if(check0(a))
 	{
-		b.s^=1;
+		b.W^=((ul)S(a)<<63);
 		return b;
 	}
 	if(check0(b)) return a;
@@ -276,13 +288,13 @@ struct  Double sub(struct  Double a,struct  Double b){
 	}
 	if(aE-bE>65)
 	{
-		a.s^=hehe;
+		a.W^=((ul)hehe<<63);
 		return a; 
 	}
 	cE=bE;
 	__int128 A,B,C;
-	A=a.Frac;A=A<<(aE-bE); B=b.Frac;
-	if(a.s) A=-A; if(b.s) B=-B;
+	A=Frac(a);A=A<<(aE-bE); B=Frac(b);
+	if(S(a)) A=-A; if(S(b)) B=-B;
 	C=A-B;
 	s=C<0?1:0;
 	if(C<0)C=-C;
@@ -290,7 +302,7 @@ struct  Double sub(struct  Double a,struct  Double b){
 	C=Round(C,&cE);
 	if(cE>1023)
 	{
-		INF.s^=hehe;
+		INF.W^=((ul)hehe<<63);
 		return INF;
 	}
 	return build(s^hehe,cE+bias,(ul)C);
@@ -303,12 +315,12 @@ struct Double Div(struct  Double a,struct  Double b)
 	if(checkinf(a)&&checkinf(b)) return NaN;
 	if(checkinf(a))
 	{
-		a.s^=b.s;
+		a.W^=((ul)S(b)<<63);
 		return a;
 	}
 	if(check0(a))
 	{
-		a.s^=b.s;
+		a.W^=((ul)S(b)<<63);
 		if(check0(b)) return NaN;
 		if(checkinf(b)) return a;
 		return a;
@@ -316,34 +328,32 @@ struct Double Div(struct  Double a,struct  Double b)
 	
 	if(checkinf(b))
 	{
-		b.s^=a.s;
-		ZERO.s=b.s;
+		if(S(a)^S(b)) ZERO.W+=TL;
 		return ZERO;
 	}
 	if(check0(b))
 	{
-		b.s^=a.s;
-		INF.s=b.s;
+		if(S(a)^S(b)) INF.W+=TL;
 		return INF;
 	}
 	
 	
-	int s=a.s^b.s,aE=getE(a),bE=getE(b),cE,len;
+	int s=S(a)^S(b),aE=getE(a),bE=getE(b),cE,len;
 	cE=aE-bE;
-	__int128 A=a.Frac,B=b.Frac,C;
+	__int128 A=Frac(a),B=Frac(b),C;
 	if(A%B)
 	{
 		dp=1;
-		A=A<<64;
-		cE=cE-64;
+		A=A<<68;
+		cE=cE-68;
 		C=A/B;
 		cE+=52;
 		C=Round(C,&cE);
 	}
 	else
 	{
-		A=A<<64;
-		cE=cE-64;
+		A=A<<68;
+		cE=cE-68;
 		C=A/B;
 		cE+=52;
 		C=Round(C,&cE);
@@ -352,15 +362,6 @@ struct Double Div(struct  Double a,struct  Double b)
 	
 	if(cE>1023)  return INF;
 	return build(s,cE+bias,(ul)C);
-}
-uint64_t Ans(struct Double x)
-{
-	uint64_t ans=0;
-	ans=x.s;
-	ans=(ans<<11)+x.Exp;
-	ans=(ans<<52)+x.Frac;
-	if(!checkdem(x)&&!check0(x)) ans-=DB;
-	return ans;
 }
 uint64_t Leaves(uint64_t a, uint64_t b, char op) {
     static bool initialized = false;
@@ -378,5 +379,5 @@ uint64_t Leaves(uint64_t a, uint64_t b, char op) {
     if (op == '*') result =mul(x, y);
     if (op == '/') result =Div(x, y);
     
-    return Ans(result);
+    return result.W;
 }
