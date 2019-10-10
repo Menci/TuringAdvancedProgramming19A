@@ -111,10 +111,10 @@ DoubleDetail inspectDouble(double x) {
 }
 
 std::string formatPercentage(double x) {
-    if (x == 1) return "100.0%";
-    char buffer[sizeof("99.99%")];
+    char buffer[sizeof("100.00%")];
     sprintf(buffer, "%05.2f%%", x * 100);
-    return buffer;
+    std::string str = buffer;
+    return str == "100.00%" ? "100.0%" : str;
 }
 
 void printDoubleDetail(std::string name,
