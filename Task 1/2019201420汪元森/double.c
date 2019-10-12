@@ -8,6 +8,7 @@
 #include <limits.h>
 #define myDouble_len 8
 
+//
 typedef unsigned int uint ;
 typedef unsigned long long ull ;
 typedef unsigned char uchar ;
