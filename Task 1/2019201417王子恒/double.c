@@ -19,16 +19,16 @@ const DOUBLE INF = {{0, 0, 0, 0, 0, 0, 240, 127}};
 const DOUBLE S_INF = {{0, 0, 0, 0, 0, 0, 240, 255}};
 const DOUBLE _NAN = {{255, 255, 255, 255, 255, 255, 255, 255}};
 
-int min(int a, int b) {
+inline int min(int a, int b) {
 	return a < b ? a : b;
 }
 
-void swap(DOUBLE *a, DOUBLE *b) {
+inline void swap(DOUBLE *a, DOUBLE *b) {
 	DOUBLE t = *a; *a = *b; *b = t;
 	return;
 }
 
-DOUBLE convert_to_double_type(uint64_t a) {
+inline DOUBLE convert_to_double_type(uint64_t a) {
 	DOUBLE b;
 	int i;
 	for(i = 0; i < 8; ++i) {
@@ -38,7 +38,7 @@ DOUBLE convert_to_double_type(uint64_t a) {
 	return b;
 }
 
-uint64_t convert_from_double_type(DOUBLE a) {
+inline uint64_t convert_from_double_type(DOUBLE a) {
 	uint64_t b = 0;
 	int i;
 	for(i = 0; i < 8; ++i) {
@@ -47,11 +47,11 @@ uint64_t convert_from_double_type(DOUBLE a) {
 	return b;
 }
 
-uint64_t get_exp(DOUBLE a) {
+inline uint64_t get_exp(DOUBLE a) {
 	return (((uint64_t)a.bit[7] & 127) << 4) | (((uint64_t)a.bit[6] & 240)>>4);
 }
 
-uint64_t get_frac(DOUBLE a) {
+inline uint64_t get_frac(DOUBLE a) {
 	int i; uint64_t b = a.bit[6] & 15;
 	for(i = 5; i >= 0; --i) {
 		b <<= 8;
@@ -60,28 +60,28 @@ uint64_t get_frac(DOUBLE a) {
 	return b;
 }
 
-int is_denormalized(DOUBLE a) {
+inline int is_denormalized(DOUBLE a) {
 	return get_exp(a) == 0;
 }
 
-int is_special_inf(DOUBLE a) {
+inline int is_special_inf(DOUBLE a) {
 	uint64_t exp = get_exp(a);
 	if(exp == MAX_EXP_NUM && !get_frac(a)) return 1;
 	return 0;
 }
 
-int is_special_nan(DOUBLE a) {
+inline int is_special_nan(DOUBLE a) {
 	uint64_t exp = get_exp(a);
 	if(exp == MAX_EXP_NUM && get_frac(a))return 1;
 	return 0;
 }
 
-int is_normalized(DOUBLE a) {
+inline int is_normalized(DOUBLE a) {
 	if(is_denormalized(a) || is_special_inf(a) || is_special_nan(a))return 0;
 	return 1;
 }
 
-int is_zero(DOUBLE a) {
+inline int is_zero(DOUBLE a) {
 	int i;
 	for(i = 0; i < 6; ++i) {
 		if(a.bit[i]) return 0;
@@ -90,20 +90,19 @@ int is_zero(DOUBLE a) {
 	return 0;
 }
 
-int get_s(DOUBLE a) {
-	int k = MAX_BIT, i = k >> 3, j = k & 7;
-	return (a.bit[i] & (1 << j)) > 0;
+inline int get_s(DOUBLE a) {
+	return (a.bit[7] & 128) > 0;
 }
 
-uint64_t get_m(DOUBLE a) {
+inline uint64_t get_m(DOUBLE a) {
 	return get_frac(a) + (is_normalized(a) ? (1LL << MAX_FRAC) : 0);
 }
 
-int get_e(DOUBLE a) {
+inline int get_e(DOUBLE a) {
 	return is_denormalized(a) ? (1 - BIAS) : (get_exp(a) - BIAS);
 }
 
-DOUBLE change_sign(DOUBLE a) {
+inline DOUBLE change_sign(DOUBLE a) {
 	if(get_s(a)) {
 		a.bit[7] &= 127;
 	} else {
