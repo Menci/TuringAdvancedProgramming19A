@@ -1,5 +1,5 @@
 # Task 0
-[Chinese](README.zh.md) / English
+[Chinese](README.zh.md) | English
 
 This is the task for you to practice submitting your project to GitHub. Your project directory should contain:
 
