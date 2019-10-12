@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define max(a,b)(a>b?a:b)
 #define min(a,b)(a<b?a:b)
@@ -131,7 +132,6 @@ ul dev(ul a,ul b) {
 	if(exp==0) last&=((frac&pos)?1:0);
 	if(exp>=2047) return inf;
 	if(exp<=0) {
-		ull t=1;
 		frac/=pos;
 		while(exp<0&&frac) {
 			last|=(frac&1);
