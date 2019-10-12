@@ -32,7 +32,14 @@ ull Merge(ull sign,ull exp,ull frac) {
 ull Round(ull s) {
 	ull tmp=1,num=128;
 	tmp<<=127;
-	while((s&tmp)==0&&tmp) tmp>>=1,num--;
+	ul s1=s>>64;
+	ul tmpp=__builtin_clzll(s1);
+	if(tmpp!=64) tmp>>=tmpp,num-=tmpp;
+	else {
+		ul s2=s%(1ull<<63);
+		tmpp=__builtin_clzll(s2);
+		tmp>>=(tmpp+64),num-=tmpp+64;
+	}
 	if(s%((ull)1<<(num-54))) s+=((ull)1)<<(num-54);
 	else if(s&((ull)1<<(num-53))) s+=((ull)1)<<(num-54);
 	if(s&(tmp<<1)) num++;
