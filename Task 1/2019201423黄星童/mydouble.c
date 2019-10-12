@@ -73,10 +73,10 @@ __uint128_t Rounding(int pointPos, __uint128_t m, int haveRemainder) { // Execut
     half = half << roundPart;
     lastBit = half << 1;
 
-    for (int i = roundPart; i >= 0; i--) {
-        tail <<= 1;
-        tail |= ((m >> i) & 1);
-    }
+    if (roundPart < 127)
+        tail = m & ((~tail) >> (127 - roundPart));
+    else
+        tail = m;
 
     if (tail < half) return m - tail;
     if (tail > half) return m - tail + lastBit;
@@ -92,13 +92,13 @@ int Compare(int e1, __uint128_t m1, int e2, __uint128_t m2) { // Return |a1| > |
 }
 
 int FindHighOne(__uint128_t m) { // Find the highest bit 1 of m.
-    int topOne = NO_ONE;
-    for (int i = 127; i >= 0; i--)
-        if ((m >> i) & 1) {
-            topOne = i;
-            break;
-        }
-    return topOne;
+    unsigned long long a = m >> 64;
+    if (a != 0)
+        return 127 - __builtin_clzll(a);
+    a = m & (-1ull);
+    if (a != 0)
+        return 63 - __builtin_clzll(a);
+    return NO_ONE;
 }
 
 int FindSign(myDouble a) { // Find the sign bit of a.
@@ -137,36 +137,41 @@ int CheckNan(int e, __uint128_t m) { // Check if the number is equal to NaN.
 }
 
 myDouble Calc(int s, int e, __uint128_t m, int pointPos, int haveRemainder) { // Make the result to IEEE 754 format.
-    int topOne = FindHighOne(m);
-    if (topOne == -1) return MakeDouble(s, 0, 0);
+    int topOne = FindHighOne(m), min;
+    if (topOne == -1)
+        return MakeDouble(s, 0, 0);
 
-    while (pointPos < topOne) {
-        pointPos++;
-        e++;
+    if (pointPos < topOne) {
+        e += topOne - pointPos;
+        pointPos += topOne - pointPos;
     }
 
-    while (pointPos > topOne && e > MIN_EXP) {
-        pointPos--;
-        e--;
+    if (pointPos > topOne && e > MIN_EXP) {
+        min = Min(pointPos - topOne, e - MIN_EXP);
+        pointPos -= min;
+        e -= min;
     }
 
     if (e > MAX_EXP)
         return s ? NEGATIVE_INF : POSITIVE_INF;
 
-    while (pointPos - topOne < 53 && e < MIN_EXP) {
-        pointPos++;
-        e++;
+    if (pointPos - topOne < 53 && e < MIN_EXP) {
+        min = Min(53 + topOne - pointPos, MIN_EXP - e);
+        pointPos += min;
+        e += min;
     }
 
     if (pointPos - topOne == 53) {
-        if (e < MIN_EXP) return MakeDouble(s, 0, 0);
+        if (e < MIN_EXP)
+            return MakeDouble(s, 0, 0);
         m = Rounding(pointPos, m, haveRemainder);
         m = TurnTo52(m, pointPos);
         return MakeDouble(s, 0, m);
     }
 
     if (pointPos > topOne) {
-        if (e < MIN_EXP) return MakeDouble(s, 0, 0);
+        if (e < MIN_EXP)
+            return MakeDouble(s, 0, 0);
         m = Rounding(pointPos, m, haveRemainder);
         if (FindHighOne(m) == pointPos)
             return MakeDouble(s, e + BIAS, 0);
@@ -177,10 +182,12 @@ myDouble Calc(int s, int e, __uint128_t m, int pointPos, int haveRemainder) { //
     m = Rounding(pointPos, m, haveRemainder);
 
     topOne = FindHighOne(m);
-    while (topOne > pointPos) {
-        pointPos++;
-        e++;
+
+    if (topOne > pointPos) {
+        e += topOne - pointPos;
+        pointPos += topOne - pointPos;
     }
+
     if (e > MAX_EXP)
         return s ? NEGATIVE_INF : POSITIVE_INF;
 
