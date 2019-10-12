@@ -6,9 +6,9 @@
 struct td
 {
 	unsigned char c[SD];
-}in[2],na,zero[2];
+}in[2], na, zero[2];
 
-const long long Blas = (1ll << (ES - 1)) - 1;
+const long long Bias = (1ll << (ES - 1)) - 1;
 
 inline int isin(struct td *x)
 {
@@ -56,7 +56,7 @@ inline void init(struct td *x, __int128 *Fx, long long *Ex, long long *Mx)
 	*Fx = Tx & ((1ll << FS) - 1);
 	
 	if(*Ex == 0) *Fx <<= 1; else *Fx += (__int128)1 << FS;
-	*Ex -= Blas;
+	*Ex -= Bias;
 }
 
 void rounding(__int128 *Ft, long long *Et, long long *Mt, int flag)
@@ -96,16 +96,16 @@ void rounding(__int128 *Ft, long long *Et, long long *Mt, int flag)
 		Ez -= FS - w + 1;
 	}
 	
-	if(Ez > Blas)
+	if(Ez > Bias)
 	{
 		Fz = 0;
 		Ez = 1ll << ES - 1;
 	}
-	if(Ez <= - Blas)
+	if(Ez <= - Bias)
 	{
 		Fz -= ird;
-		if((Fz & (((__int128)1 << ( - Blas - Ez >= 128 ? 127 : - Blas - Ez)) - 1)) != 0) rd = 0;
-		( - Blas - Ez >= 128) ? (Fz = 0) : (Fz >>= - Blas - Ez);
+		if((Fz & (((__int128)1 << ( - Bias - Ez >= 128 ? 127 : - Bias - Ez)) - 1)) != 0) rd = 0;
+		( - Bias - Ez >= 128) ? (Fz = 0) : (Fz >>= - Bias - Ez);
 		if(Fz & 1)
 		{
 			Fz ++ ;
@@ -113,9 +113,9 @@ void rounding(__int128 *Ft, long long *Et, long long *Mt, int flag)
 				Fz -- ;
 		}
 		Fz >>= 1;
-		Ez = - Blas; 
+		Ez = - Bias; 
 	}
-	Ez += Blas;
+	Ez += Bias;
 	
 	*Ft = Fz;
 	*Et = Ez;
