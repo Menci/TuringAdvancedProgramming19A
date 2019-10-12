@@ -4,6 +4,6 @@ And I didn't implement the extendable division function, so I simply gave up and
 
 `main.c` is the new version which supports double precision.
 
-`extended-version.c` is the original version which can be easily modified to support multi-precision.
+`expandable-version.c` is the original version which can be easily modified to support multi-precision.
 
 `test.sh` uses the checker to test `main.c`.

@@ -5,6 +5,7 @@ const int W = 64;
 const int BYTE_SIZE = 8;
 const int W_EXP = 11;
 const int W_FRAC = 52;
+const int DIV_SHIFT = 70;
 #define BIT(x) (1ll << (x))
 #define VAL(x, y)    (((y) < 0 && (y) > W * 2) ? 0 : (((x)[(y) >> 3] >> (y & 7)) & 1))
 #define SET(x, y)    (((y) < 0 && (y) > W * 2) ? 0 : (((x)[(y) >> 3]) |=  (1 << ((y) & 7))))
@@ -71,7 +72,7 @@ db getNeg(const db x) {
 	return y;
 }
 
-inline uint8_t addition(uint8_t *s, const int x, const int y) {
+uint8_t addition(uint8_t *s, const int x, const int y) {
 	for(register int i = x; i < y; ++i) {
 		TOGGLE(s, i);
 		if(VAL(s, i)) break;
@@ -409,7 +410,7 @@ db DIVISION(db a, db b) {
 	if(expb) y |= BIT(W_FRAC);
 	if(expa && (!expb)) --exp;
 	if((!expa) && expb) ++exp;
-	x <<= W;
+	x <<= DIV_SHIFT;
 	z = x % y;
 	x /= y;
 	int st, ed;
@@ -417,32 +418,32 @@ db DIVISION(db a, db b) {
 	memset(c.s, 0, sizeof(c.s));
 	if(sgn) SET(c.s, W - 1);
 	if(x == 0) return sgn ? ZERO_N : ZERO;
-	int pos, top = W_FRAC + W;
+	int pos, top = W_FRAC + DIV_SHIFT;
 	for(int i = top; i >= 0; --i) if(VAL(s, i)) {
 		pos = i;
 		break;
 	}
-	int dlt = W - pos;
+	int dlt = DIV_SHIFT - pos;
 	if(exp > 0) {
 		if(dlt < 0) ed = pos - 1, exp += (-dlt);
 		else if(dlt == 0) ed = pos - 1;
 		else {
-			if(dlt >= exp) ed = W - exp, exp = 0;
+			if(dlt >= exp) ed = DIV_SHIFT - exp, exp = 0;
 			else ed = pos - 1, exp -= dlt;
 		}
 	}
 	else if(exp == 0) {
 		if(dlt < 0) ed = pos - 1, exp += -dlt;
 		else if(dlt == 0) ed = pos, exp = 0;
-		else ed = W , exp = 0;
+		else ed = DIV_SHIFT , exp = 0;
 	}
 	else {
 		if(dlt < 0) {
-			if(-dlt > -exp) ed = W + (-exp), exp = 1;
+			if(-dlt > -exp) ed = DIV_SHIFT + (-exp), exp = 1;
 			else if(-dlt == -exp) ed = pos, exp = 0;
-			else ed = W + (-exp), exp = 0;
+			else ed = DIV_SHIFT + (-exp), exp = 0;
 		}
-		else ed = W + (-exp), exp = 0;
+		else ed = DIV_SHIFT + (-exp), exp = 0;
 	}
 	st = ed - W_FRAC + 1;
 	uint8_t flg = 0;
@@ -462,7 +463,7 @@ db DIVISION(db a, db b) {
 	if(!flg) {
 		if(exp + 1 >= BIT(W_EXP)) return sgn ? INF_N : INF_P;
 		for(int i = st; i <= ed; ++i)
-			if(i >= 0 && i <= W + W_FRAC && VAL(s, i)) SET(c.s, i - st);
+			if(i >= 0 && i <= DIV_SHIFT + W_FRAC && VAL(s, i)) SET(c.s, i - st);
 		for(int i = W_FRAC; i < W - 1; ++i) 
 			if(exp & BIT(i - W_FRAC)) SET(c.s, i);
 		return c;
@@ -512,5 +513,5 @@ uint64_t calculate(uint64_t a, uint64_t b, char op) {
 }
 
 int main() {
-
+	
 }

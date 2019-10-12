@@ -453,7 +453,6 @@ db DIVISION(db a, db b) {
 	exp = expa - expb + BIAS;
 	__int128_t x = 0, y = 0, z;
 	uint8_t *s = (uint8_t *) &x;
-	uint8_t *t = (uint8_t *) &y;
 	for(int i = 0; i < W_FRAC; ++i) {
 		if(VAL(a.s, i)) x |= BIT(i);
 		if(VAL(b.s, i)) y |= BIT(i);
@@ -462,7 +461,7 @@ db DIVISION(db a, db b) {
 	if(expb) y |= BIT(W_FRAC);
 	if(expa && (!expb)) --exp;
 	if((!expa) && expb) ++exp;
-	x <<= W;
+	x <<= W + 5;
 	z = x % y;
 	x /= y;
 	int st, ed;
@@ -470,12 +469,12 @@ db DIVISION(db a, db b) {
 	memset(c.s, 0, sizeof(c.s));
 	if(sgn) SET(c.s, W - 1);
 	if(x == 0) return sgn ? ZERO_N : ZERO;
-	int pos, top = W_FRAC + W;
+	int pos, top = W_FRAC + W + 5;
 	for(int i = top; i >= 0; --i) if(VAL(s, i)) {
 		pos = i;
 		break;
 	}
-	int dlt = W - pos;
+	int dlt = W + 5 - pos;
 	if(exp > 0) {
 		if(dlt < 0) ed = pos - 1, exp += (-dlt);
 		else if(dlt == 0) ed = pos - 1;
@@ -491,14 +490,19 @@ db DIVISION(db a, db b) {
 	}
 	else {
 		if(dlt < 0) {
-			if(-dlt > -exp) ed = W + (-exp), exp = 1;
+			if(-dlt > -exp) ed = W + 5 + (-exp), exp = 1;
 			else if(-dlt == -exp) ed = pos, exp = 0;
-			else ed = W + (-exp), exp = 0;
+			else ed = W + 5 + (-exp), exp = 0;
 		}
-		else ed = W + (-exp), exp = 0;
+		else ed = W + 5 + (-exp), exp = 0;
 	}
+	// printf("%d\n", pos);
+	// for(int i = 0; i <= W_FRAC + W + 5; ++i) printf("%d", (int)VAL(s, i)); puts("");
+	uint8_t *t = &z;
+	// for(int i = 0; i <= 127; ++i) printf("%d", (int)VAL(t, i)); puts("");
 	st = ed - W_FRAC + 1;
 	uint8_t flg = 0;
+	// printf("%d %d\n",st ,ed);
 	if(st >= 0 && st <= 2 * W && VAL(s, st)) { // Rounding
 		if(st - 1 >= 0 && st - 1 <= 2 * W && VAL(s, st - 1)) flg += addition(s, st, ed + 1);
 	}
@@ -516,7 +520,7 @@ db DIVISION(db a, db b) {
 		// printf("%d %d\n", st, ed);
 		if(exp + 1 >= BIT(W_EXP)) return sgn ? INF_N : INF_P;
 		for(int i = st; i <= ed; ++i)
-			if(i >= 0 && i <= W + W_FRAC && VAL(s, i)) SET(c.s, i - st);
+			if(i >= 0 && i <= W + 5 + W_FRAC && VAL(s, i)) SET(c.s, i - st);
 		for(int i = W_FRAC; i < W - 1; ++i) 
 			if(exp & BIT(i - W_FRAC)) SET(c.s, i);
 		return c;
@@ -596,7 +600,7 @@ int main() {
 	for(int tim = 1; tim <= cas; ++tim) {
 		// if(tim % 10000 == 0) printf("=========================%d=======================\n", tim);
 		db a, b;
-		uint64_t xx = 0x11b21dddd1a4b2e7, yy = 0xee4533c48361c678;
+		uint64_t xx = 0x00000198aac2f16b, yy = 0x2e9c53af17b6baf6;
 		
 		double x, y;
 		*(&x) = *((double *) &xx);
