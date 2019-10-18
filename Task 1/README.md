@@ -1,5 +1,5 @@
 # Task 1
-[Chinese](README.zh.md) | English
+[Chinese](README.zh.md) / English
 
 Implementate IEEE 754 64-bit floating point calculation.
 
