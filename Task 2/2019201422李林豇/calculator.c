@@ -1502,7 +1502,7 @@ int main()
         ungetc(c,stdin);
         input(); 
         puts("");
-        fflush(stdout);
+        // fflush(stdout);
     }
     return 0;
 }
