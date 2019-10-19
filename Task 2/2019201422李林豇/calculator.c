@@ -674,7 +674,7 @@ uint64_t convert_from_my_double(struct my_double _X)
 
 
 struct my_double pos_pow10[max_ten_exp+1][bit_len];
-struct my_double neg_pow10[max_ten_exp+1][bit_len];
+struct my_double neg_pow10[min_ten_exp+1][bit_len];
 
 void init_pow10()
 {
