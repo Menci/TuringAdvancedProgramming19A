@@ -404,6 +404,17 @@ void Print(myDouble a) {
         putchar('-');
     }
 
+    int e = FindExp(a);
+    __uint128_t m = FindFrac(a);
+    if (CheckInf(e, m)) {
+        printf("inf");
+        return;
+    }
+    if (CheckNan(e, m)) {
+        printf("nan");
+        return;
+    }
+
     int notZero = 0, zeroNumber = 0;
     for (int i = MAX_10_EXP, j; i >= 0; i--) {
         for (j = 9; j > 0; j--)
@@ -436,4 +447,5 @@ void Print(myDouble a) {
     while (zeroNumber--)
         putchar('0');
     PrintUint128_t(decimal);
+    return;
 }
