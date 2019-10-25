@@ -6,7 +6,7 @@ Transform simple expressions to pseudo x86-64 assembly code.
 The C code to transform (*origin function*) is:
 
 1. A function with 3 parameters (all parameters and variables are 64-bit signed integers).
-2. 40 local variables (all used).
+2. 60 local variables (all used).
 3. 60 statements of simple assignment expressions, each is in the form of `X = Y op Z`:
     * `X` and `Y` are local variables.
     * `Z` is a local variable, parameter or constant.
@@ -28,13 +28,13 @@ You should optimize your *output function* to reduce:
 * The number of different local variables used (registers used).
 * The number of different members of array used (memory size used).
 
-You should read the *origin function* from test data. The arguments are `a1`, `a2` and `a3`. Local variables are `x1` to `x40`, each line contains an statement, starts with no blank, ends with a `;`. Operators and operands are splitted by a space. For example:
+You should read the *origin function* from test data. The arguments are `a1`, `a2` and `a3`. Local variables are `v1` to `v60`, each line contains an statement, starts with no blank, ends with a `;`. Operators and operands are splitted by a space. For example:
 
 ```c
-x1 = a1 + 100;
-x2 = x1 * 70;
-x3 = x1 / x2;
-x4 = x3 - x1;
+v1 = a1 + 100;
+v2 = v1 * 70;
+v3 = v1 / v2;
+v4 = v3 - v1;
 ```
 
 To check the correctness of your *output function*, compile the *origin function* and your *output function* and run them with some groups of random arguments and print them values of every expression in *origin function*.
