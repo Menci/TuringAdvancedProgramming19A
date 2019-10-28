@@ -37,7 +37,7 @@ x3 = x1 / x2;
 x4 = x3 - x1;
 ```
 
-To check the correctness of your *output function*, compile the *origin function* and your *output function* and run them with some groups of random arguments.
+To check the correctness of your *output function*, compile the *origin function* and your *output function* and run them with some groups of random arguments and print them values of every expression in *origin function*.
 
 # Deadline
 Your Pull Request should be created before October 28, 2019 23:00 (CST).
