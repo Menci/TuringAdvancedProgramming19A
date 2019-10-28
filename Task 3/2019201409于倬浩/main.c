@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#define LOCAL_DEBUG
 #define MAX_L 60
 #define INPUT_FILE_NAME "1.txt"
 #define MAX_REG 16
@@ -15,13 +16,15 @@ void printExpr(int lv, char op, int rv, char ltyp, char rtyp) { // Indent with 4
 
 void printFileHead() {
 	puts("#include <stdio.h>");
-	printf("int ");
-	for(int i = 1; i <= 3; ++i) printf( (i == 3) ? " a%d;\n" : " a%d,", i);
+	puts("int a1 = 998, a2 = 244, a3 = 353;");
+	// printf("int ");
+	// for(int i = 1; i <= 3; ++i) printf( (i == 3) ? " a%d;\n" : " a%d,", i);
 	printf("int ");
 	for(int i = 0; i < MAX_REG; ++i) printf( (i == (MAX_REG - 1)) ? " r%d;\n" : " r%d,", i);
 	printf("int ");
 	for(int i = 0; i < MAX_L; ++i) printf( (i == (MAX_L - 1)) ? " p%d;\n" : " p%d,", i);
 	printf("int main() { \n");
+	printf("    freopen(\"result1.txt\", \"w\", stdout);\n");
 }
 
 void printFileEnd() {
@@ -72,9 +75,15 @@ void recycleSpace(int t) {
 		}
 	}
 }
-int main() {
-	freopen("../testdata/" INPUT_FILE_NAME, "r", stdin);
+int main(int argc, char *argv[]) {
 	freopen("output.c", "w", stdout);
+	if(argc == 1) freopen("../testdata/" INPUT_FILE_NAME, "r", stdin);
+	else {
+		char filename[256];
+		strcat(filename, "../testdata/");
+		strcat(filename, argv[1]);
+		freopen(filename, "r", stdin);
+	}
 	int vn, s1, s2, fl;
 	char p;
 	for(int i = 1; i <= MAX_L; ++i) las[i] = i;
@@ -144,9 +153,12 @@ int main() {
 				sreg[newr] = i, loc[i] = newr, st[i] = 1;
 			}
 		}
-		recycleSpace(i);
+		
 		#ifdef LOCAL_DEBUG
-		fprintf(stderr, "time = %d,mem = %d, reg = %d\n", i, max_mem, max_reg);
+		// fprintf(stderr, "time = %d,mem = %d, reg = %d\n", i, max_mem, max_reg);
+		int x = -1;
+		for(int j = 0; j < MAX_REG; ++j) if(sreg[j] == i) x = j;
+		printf("    printf(\"%%d\\n\", r%d);\n", x);
 		printf("    /* \n");
 		printf("    ");
 		for(int j = 0; j < MAX_REG; ++j) printf("%3d", sreg[j]); puts("");
@@ -155,6 +167,8 @@ int main() {
 		puts("");
 		printf("    */\n");
 		#endif
+		recycleSpace(i);
 	}
 	printFileEnd();
+	fprintf(stderr, "max_reg = %d, max_mem = %d\n", max_reg, max_mem);
 }
