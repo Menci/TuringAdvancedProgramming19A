@@ -3,15 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 
-const int N = 105;
-
-enum _op {
-    ADD = 0, SUB, MUL, DIV
-}; 
-
-enum _type {
-    REG = 0, MEM, IMM
-};
+#define N 105
 
 int n, m, C;
 long long X[N], Y[N], Z[N], Z_type[N];
@@ -23,6 +15,13 @@ long long mem_state[1024]; //mem_state... same.
 
 long long cnt[N];
 
+enum _op {
+    ADD = 0, SUB, MUL, DIV
+}; 
+
+enum _type {
+    REG = 0, MEM, IMM
+};
 
 char var_name[2048][10];
 char str[3][105];
