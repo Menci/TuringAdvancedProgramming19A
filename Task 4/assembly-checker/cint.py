@@ -1,4 +1,4 @@
-from ctypes import cdll, c_int
+from ctypes import cdll, c_long
 from os import path
 from tempfile import TemporaryDirectory
 import subprocess
@@ -6,23 +6,23 @@ import subprocess
 from utils import format_stderr
 
 ccode = '''
-int add(int a, int b) {
+long add(long a, long b) {
     return a + b;
 }
 
-int sub(int a, int b) {
+long sub(long a, long b) {
     return a - b;
 }
 
-int mul(int a, int b) {
+long mul(long a, long b) {
     return a * b;
 }
 
-int div(int a, int b) {
+long div(long a, long b) {
     return a / b;
 }
 
-int xor(int a, int b) {
+long xor(long a, long b) {
     return a ^ b;
 }
 '''
@@ -50,6 +50,12 @@ def init():
         print("Error loading C operation library: " + str(e))
         exit(1)
 
+    clib.add.restype = c_long
+    clib.sub.restype = c_long
+    clib.mul.restype = c_long
+    clib.div.restype = c_long
+    clib.xor.restype = c_long
+
 class CInt:
     def __init__(self, value = 0):
         self.value = value
@@ -57,28 +63,28 @@ class CInt:
     def __add__(self, other):
         if type(other) != CInt:
             other = CInt(other)
-        return CInt(clib.add(c_int(self.value), c_int(other.value)))
+        return CInt(clib.add(c_long(self.value), c_long(other.value)))
     
     def __sub__(self, other):
         if type(other) != CInt:
             other = CInt(other)
-        return CInt(clib.sub(c_int(self.value), c_int(other.value)))
+        return CInt(clib.sub(c_long(self.value), c_long(other.value)))
     
     def __mul__(self, other):
         if type(other) != CInt:
             other = CInt(other)
-        return CInt(clib.mul(c_int(self.value), c_int(other.value)))
+        return CInt(clib.mul(c_long(self.value), c_long(other.value)))
     
     def __truediv__(self, other):
         if type(other) != CInt:
             other = CInt(other)
         if other.value == 0:
             raise ZeroDivisionError("C integer division by zero")
-        return CInt(clib.div(c_int(self.value), c_int(other.value)))
+        return CInt(clib.div(c_long(self.value), c_long(other.value)))
         
     def __xor__(self, other):
         if type(other) != CInt:
             other = CInt(other)
-        return CInt(clib.xor(c_int(self.value), c_int(other.value)))
+        return CInt(clib.xor(c_long(self.value), c_long(other.value)))
     
 init()
