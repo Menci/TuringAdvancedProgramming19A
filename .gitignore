@@ -1,0 +1,20 @@
+# Editors
+.vscode
+.*.sw*
+*~
+
+# C / CPP
+build
+a.out
+*.o
+*.so
+*.dylib
+*.lib
+*.a
+*.dll
+*.exe
+*.dYSM
+
+# Python
+__pycache__/
+*.py[cod]
