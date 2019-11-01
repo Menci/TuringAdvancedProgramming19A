@@ -127,6 +127,7 @@ def main():
 
         print("Compiling your assembly code.")
         dllasm = compile_asm_and_load(asmcode)
+        dllasm.f.restype = ctypes.c_long
         
         for i in range(args.check_rounds):
             print("Running on %s..." % (colorize(i + 1, bold=True)), end="\r")
@@ -137,7 +138,7 @@ def main():
             if answer == None:
                 continue
             
-            asm_result = dllasm.f(*[ctypes.c_int(argument) for argument in arguments])
+            asm_result = dllasm.f(*[ctypes.c_long(argument) for argument in arguments])
             
             if answer != asm_result:
                 print("\nWrong output on round %s (%05.2f%%):" % (colorize(i + 1, bold=True), (i + 1) / args.check_rounds))
