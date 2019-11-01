@@ -1,0 +1,7 @@
+#!/bin/bash
+VARS=""
+RET="return"
+for i in {1..60}; do VARS="$VARS\nint v$i;"; done
+for i in {1..59}; do RET="$RET v$i ^"; done
+RET="$RET v60;"
+cat <(echo -e "int f(int a1, int a2, int a3) {") <(echo -e "$VARS") <(cat) <(echo "$RET") <(echo "}") | gcc -x c - -S -o - | grep -v "^\s*\." | grep -v ':$'
