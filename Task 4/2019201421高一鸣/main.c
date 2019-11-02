@@ -8,7 +8,7 @@
 
 #define N 100010
 #define pos(cnt,x) pos([flag[x][cnt]])
-#define Reg_Size 11
+#define Reg_Size 10
 #define Max 60
 
 int getline_(char s[],int lim){
@@ -40,21 +40,21 @@ char opt[N],out[4]={'0','a','v'};
 int jc[17],mem[N],*ms,**pjc[17];
 int cntjc[17][100];
 char reg[20][5]={"","%rdi","%rsi","%rbx","%rcx","%r8","%r9","%r10","%r11","%r12","%r13","%r14","%r15"};
-//,rbx,rcx,rdx,rsp,rbp,rsi,rdi,r8,r9,r10,r11,r12,r13,r14,r15
 int isReg(int *x) {
-	if((x-jc)/sizeof(int)<=Reg_Size&&(x-jc)>=0) return 1;
+	
+	if((x-jc)<=Reg_Size&&(x-jc)>=0) return 1;
 	return 0;
 }
 void modify(int **s) {
-	s=&ms;
+	*s=ms;
 }
 char posChar[3][20];
 int main() {
-//	freopen("../testdata/10.txt","r",stdin);
-	puts("pushq    %rbx"),puts("pushq    %rsp"),puts("pushq    %rbp"),puts("pushq    %r12");
-	puts("pushq    %r13"),puts("pushq    %r14"),puts("pushq    %r15");
-	puts("movq    %rsp, %rbp"),puts("addq    $20000032,%rbp");
-	puts("movq %rdx,%rbx");
+	puts("pushq\t%rbx"),puts("pushq\t%rsp"),puts("pushq\t%rbp"),puts("pushq\t%r12");
+	puts("pushq\t%r13"),puts("pushq\t%r14"),puts("pushq\t%r15");
+	puts("movq\t%rsp, %rbp");
+	puts("xorq\t%r15,\t%r15");
+	puts("movq\t%rdx,%rbx");
 	int cnt=0;
 	while(~scanf("%s",s)) {
 		cnt++;
@@ -104,8 +104,7 @@ int main() {
 				}
 			}
 			modify(&(*pjc[tmp]));
-			printf("movq    -%ld(%%rbp),%s\n",(ms-mem)*sizeof(long long),reg[tmp]);
-//			printf("mem[%ld] = reg%d;\n",ms-mem,tmp);
+			printf("movq    %s,-%ld(%%rbp)\n",reg[tmp],(ms-mem)*sizeof(long long));
 			ms++;
 			jc[tmp]=0;
 		}
@@ -116,61 +115,51 @@ int main() {
 				pjc[j]=&pos[2][i];
 				memcpy(cntjc[j],cntt[2][i],sizeof(int)*Max);
 				sprintf(posChar[2],"%s",reg[j]);
-//				printf("reg%d = ",j);
 				if(flag[0][i]==3) {
 					posChar[0][0]='$';
 					sprintf(posChar[0]+1,"%lld",son[0][i]);
-//					printf("$%d\n",son[0][i]);
-//					printf("%d;\n",son[0][i]);
 				} else {
-//					printf("%d %d\n",flag[0][i],son[0][i]);
 					int *pos1=pos[flag[0][i]][son[0][i]];
 					if(isReg(pos1)) {
 						sprintf(posChar[0],"%s",reg[pos1-jc]);
-//						printf("%s\n",reg[pos1-jc]);
 					}
 					else {
-						sprintf(posChar[0],"-%ld(%%rbp)",pos1-mem);
-//						printf(" -%ld(%%rbp)\n",pos1-mem);
+						sprintf(posChar[0],"-%ld(%%rbp)",(pos1-mem)*sizeof(long long));
 					}
-//					if(isReg(pos1)) printf("reg%ld;\n",pos1-jc);
-//					else printf("mem[%ld];\n",pos1-mem);
 				}
-//				if(opt[i]=='+') printf("addq    %s, ")
-//				printf("reg%d %c= ",j,opt[i]);
 				if(flag[1][i]==3) {
 					posChar[1][0]='$';
 					sprintf(posChar[1]+1,"%lld",son[1][i]);
-//					printf("%d;\n",son[1][i]);
 				} else {
 					int *pos2=pos[flag[1][i]][son[1][i]];
 					if(isReg(pos2)) {
 						sprintf(posChar[1],"%s",reg[pos2-jc]);
-//						printf("reg%ld;\n",pos2-jc);
 					}
 					else {
-						sprintf(posChar[1],"-%ld(%%rbp)",pos2-mem);
-//						printf("mem[%ld];\n",pos2-mem);
+						sprintf(posChar[1],"-%ld(%%rbp)",(pos2-mem)*sizeof(long long));
 					}
 				}
-				printf("movq %s, %s\n",posChar[0],posChar[2]);
-				if(opt[i]!='\\') {
-					if(opt[i]=='+') printf("addq %s, %s\n",posChar[1],posChar[2]);
-					if(opt[i]=='-') printf("subq %s, %s\n",posChar[1],posChar[2]);
-					if(opt[i]=='*') printf("imulq %s, %s\n",posChar[1],posChar[2]);
-//					if(printf(""))
+				printf("movq\t%s,\t%s\n",posChar[0],posChar[2]);
+				if(opt[i]!='/') {
+					if(opt[i]=='+') printf("addq\t%s,\t%s\n",posChar[1],posChar[2]);
+					if(opt[i]=='-') printf("subq\t%s,\t%s\n",posChar[1],posChar[2]);
+					if(opt[i]=='*') printf("imulq\t%s,\t%s\n",posChar[1],posChar[2]);
 				} else {
-					printf("movq %s, %%rax\n",posChar[2]);
-					printf("idivq %s\n",posChar[1]);
-					printf("movq %%rax\n, %s",posChar[2]);
+					printf("movq\t%s,\t%%r14\n",posChar[1]);
+					printf("movq\t%s,\t%%rax\n",posChar[2]);
+					puts("cqto");
+					printf("idivq\t%%r14\n");
+					printf("movq\t%%rax,\t%s\n",posChar[2]);
 				}
-				printf("xorq %s,%%r15\n",posChar[2]);
+				
 				j=17;
 			}
 		}
+		printf("xorq\t%s,\t%%r15\n",posChar[2]);
 	}
-	puts("movq %r15, %rax");
-	puts("subq    $20000032,%rbp"),puts("popq    %r15");
-	puts("popq    %r14"),puts("popq    %r13"),puts("popq    %r12");
-	puts("popq    %rbp"),puts("popq    %rsp"),puts("popq    %rbx");
+	puts("movq\t%r15,\t%rax");
+	puts("popq\t%r15");
+	puts("popq\t%r14"),puts("popq\t%r13"),puts("popq\t%r12");
+	puts("popq\t%rbp"),puts("popq\t%rsp"),puts("popq\t%rbx");
+	puts("ret");
 }
