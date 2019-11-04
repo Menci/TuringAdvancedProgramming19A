@@ -56,5 +56,9 @@ $ cd "Task 4"
 $ python3 assembly-checker /path/to/your/compiled/program/a.out
 ```
 
+# Grading
+* **Code Style**: Perfect, Great, Good, Bad.
+* **Correctness**: Yes, No.
+
 # Deadline
 Your Pull Request should be created before November 4, 2019 23:00 (CST).

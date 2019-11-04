@@ -8,5 +8,8 @@ This is the task for you to practice submitting your project to GitHub. Your pro
 
 **Hint:** There's an example of the project directory in this task directory.
 
+# Grading
+This Task will not be graded.
+
 # Deadline
 Your Pull Request should be created before September 30, 2019 23:00 (CST).
