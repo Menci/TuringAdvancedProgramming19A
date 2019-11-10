@@ -24,7 +24,7 @@
 $ gcc -O2 -fPIC -shared your_qsort.c -o /tmp/your_qsort.so
 ```
 
-然后，编译 `double-checker`：
+然后，编译 `qsort-checker`：
 
 ```bash
 $ cd "Task 5/qsort-checker"
