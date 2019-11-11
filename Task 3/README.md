@@ -39,5 +39,10 @@ v4 = v3 - v1;
 
 To check the correctness of your *output function*, compile the *origin function* and your *output function* and run them with some groups of random arguments and print them values of every expression in *origin function*.
 
+# Grading
+* **Code Style**: Perfect, Great, Good, Bad.
+* **Correctness**: Yes, No.
+* **Optimization**: High, Medium, Low.
+
 # Deadline
 Your Pull Request should be created before October 28, 2019 23:00 (CST).

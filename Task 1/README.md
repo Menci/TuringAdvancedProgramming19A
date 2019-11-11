@@ -58,5 +58,11 @@ Both the result of checking and your code itself influences your grade.
 
 Have fun!
 
+# Grading
+* **Code Style**: Perfect, Great, Good, Bad.
+* **Correctness**: Perfect, Great, Good, Bad.
+* **Speed**: Perfect, Great, Good, Bad.
+* **Scalability**: High, Low.
+
 # Deadline
 Your Pull Request should be created before October 12, 2019 23:00 (CST).
