@@ -27,5 +27,9 @@ $ cd "Task 2"
 $ python3 evaluator-checker /path/to/your/compiled/program/a.out
 ```
 
+# Grading
+* **Code Style**: Perfect, Great, Good, Bad.
+* **Correctness**: Perfect, Good, Bad.
+
 # Deadline
 Your Pull Request should be created before October 21, 2019 23:00 (CST).
