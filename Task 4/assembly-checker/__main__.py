@@ -2,7 +2,7 @@ import subprocess
 import ctypes
 from pathlib import Path
 from random import Random, randint
-from os import system, listdir, path, chdir
+from os import system, listdir, path, chdir, getcwd
 from tempfile import TemporaryDirectory
 from argparse import ArgumentParser
 from functools import cmp_to_key
@@ -15,9 +15,10 @@ TESTDATA_PATH = "testdata"
 ARGUMENT_COUNT = 3
 VARIABLE_COUNT = 60
 
-chdir(Path(__file__).resolve().parent)
-
 def get_all_testdata():
+    cwd = getcwd()
+    chdir(Path(__file__).resolve().parent)
+
     def compare_function(a, b):
         if len(a) == len(b):
             if a < b:
@@ -31,14 +32,23 @@ def get_all_testdata():
 
     testdatas = [path.join(TESTDATA_PATH, f) for f in listdir(TESTDATA_PATH) if not f.endswith(".py") and path.isfile(path.join(TESTDATA_PATH, f))]
     testdatas.sort(key=cmp_to_key(compare_function))
+
+    chdir(cwd)
     return testdatas
 
 def read_testdata(file):
+    cwd = getcwd()
+    chdir(Path(__file__).resolve().parent)
+
+    result = ""
     try:
-        return str(open(file).read())
+        result = str(open(file).read())
     except Exception as e:
         print("Error while reading testdata '%s': %s" % (file, str(e)))
         exit(1)
+
+    chdir(cwd)
+    return result
 
 def run_generator(execuatable, input):
     try:
