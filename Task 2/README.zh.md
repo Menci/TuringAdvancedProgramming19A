@@ -27,5 +27,9 @@ $ cd "Task 2"
 $ python3 evaluator-checker /path/to/your/compiled/program/a.out
 ```
 
+# 评分
+* **代码风格**：最好、好、一般、差。
+* **正确性**：最好、一般、差。
+
 # 截止日期
 你的 Pull Request 需要在 2019 年 10 月 21 日 23:00（中国标准时间）前被创建。
