@@ -3,17 +3,16 @@
 #include <string.h>
 #include <stdint.h>
 #include <pthread.h>
-#include <sys/sysinfo.h>
-
+#include <sys/sysinfo.h> //get_nprocs_conf()
 #define SWAP(a, b, size)                \
     do {                                \
         COPY(swapBuffer, (a), size);    \
         COPY((a), (b), size);           \
         COPY((b), swapBuffer, size);    \
     } while (0)
-
 #define COPY(a, b, size) memcpy((a), (b), (size))
 #define INTRO_LOWER_BOUND 16
+#define _MAX_THREAD 16
 
 int my_log2(int x) {
     int ret = 0;
@@ -53,12 +52,12 @@ void myInsertionSort(void *base, size_t nmemb, size_t size,
         void *j = i - size;
         COPY(tmpBuf, i, size);
         if(compar(base, tmpBuf) > 0) {
-            for(j; j >= base; j -= size) 
+            for(; j >= base; j -= size) 
                 COPY(j + size, j, size);
             COPY(base, tmpBuf, size);
         }
         else {
-            for(j; compar(j, tmpBuf) > 0; j -= size) 
+            for(; compar(j, tmpBuf) > 0; j -= size) 
                 COPY(j + size, j, size);
             COPY(j + size, tmpBuf, size);
         }
@@ -83,7 +82,7 @@ void reverseSequence(void *base, size_t nmemb, size_t size, void *swapBuffer) {
     for (int i = 0; i < (nmemb >> 1); ++i)
         SWAP(base + i * size, base + (nmemb - 1 - i) * size, size);
 }
-#define CHECK_SPECIAL_THRESHOLD 50
+
 void myIntroSort(void *base, size_t nmemb, size_t size,
                        int (*compar)(const void *, const void *), int depLim,
                        void *swapBuffer) {
@@ -151,14 +150,14 @@ void _Qsort(void *base, size_t nmemb, size_t size,
                       swapBuffer);
     free(swapBuffer);
 }
+
 typedef struct qsort_args_t{
 	void *base;
 	size_t nmemb;
 	size_t size;
 	int (*compar)(const void *, const void *);
 }qsort_args_t;
-int MY_THREAD;
-#define _MAX_THREAD 64
+static int MY_THREAD;
 static pthread_barrier_t mypthreadBarrier;
 
 void* workThread(void *args) {
@@ -169,6 +168,7 @@ void* workThread(void *args) {
 }
 
 void mergeSeq(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) {
+    if(MY_THREAD < 2) return;
 	void *arr = malloc(size * nmemb);
 	void *begin[_MAX_THREAD], *end[_MAX_THREAD];
 	begin[0] = base;
@@ -223,5 +223,5 @@ void Qsort(void *base, size_t nmemb, size_t size,
 		pthread_create(&tid, NULL, workThread, (void *) &arg[i]);
 	}
 	pthread_barrier_wait(&mypthreadBarrier);
-	mergeSeq(base, nmemb, size, compar);
+    mergeSeq(base, nmemb, size, compar);
 }

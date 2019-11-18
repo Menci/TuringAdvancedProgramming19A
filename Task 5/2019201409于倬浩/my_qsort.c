@@ -80,7 +80,7 @@ void reverseSequence(void *base, size_t nmemb, size_t size, void *swapBuffer) {
     for (int i = 0; i < (nmemb >> 1); ++i)
         SWAP(base + i * size, base + (nmemb - 1 - i) * size, size);
 }
-#define CHECK_SPECIAL_THRESHOLD 50
+
 void myIntroSort(void *base, size_t nmemb, size_t size,
                        int (*compar)(const void *, const void *), int depLim,
                        void *swapBuffer) {
