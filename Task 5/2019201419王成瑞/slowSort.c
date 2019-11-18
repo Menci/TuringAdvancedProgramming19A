@@ -1,5 +1,5 @@
 #ifndef _DEBUG
-#   pragma GCC optimize("Ofast", "no-stack-protector", "unroll-loops")
+#   pragma GCC optimize("Ofast", "no-stack-protector", "unroll-loops", "fast-math", "inline")
 #endif
 
 #include <pthread.h>
@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 #define DIRECT_SORT     (32)
-#define MAX_THREAD_NUM  ((size_t)4)
+#define MAX_THREAD_NUM  ((size_t)8)
 
 typedef int (*compare_t)(const void*, const void*);
 typedef unsigned char* pointer_t;
@@ -78,12 +78,10 @@ static void directSort(void *_arg) {
     if(cnt <= 1) return;
 
     size_t n1, n2;
-    void *b1, *b2;
     n1 = cnt / 2, n2 = cnt - n1;
-    b1 = base, b2 = base + n1 * size;
 
-    directSortArg_t arg1 = {base : b1, pool : pool, cnt : n1, size : size, cmp : cmp};
-    directSortArg_t arg2 = {base : b2, pool : pool, cnt : n2, size : size, cmp : cmp};
+    directSortArg_t arg1 = {base : base, pool : pool, cnt : n1, size : size, cmp : cmp};
+    directSortArg_t arg2 = {base : (base + n1 * size), pool : pool, cnt : n2, size : size, cmp : cmp};
 
     directSort((void*)&arg1), directSort((void*)&arg2);
     directMerge(base, n1, n2, size, pool, cmp);
@@ -126,12 +124,10 @@ static void indirectSort(void *_arg) {
     if(cnt <= 1) return;
     
     size_t n1, n2;
-    void **b1, **b2;
     n1 = cnt / 2, n2 = cnt - n1;
-    b1 = base, b2 = base + n1;
 
-    indirectSortArg_t arg1 = {base : b1, pool : pool, cnt : n1, cmp : cmp};
-    indirectSortArg_t arg2 = {base : b2, pool : pool, cnt : n2, cmp : cmp};
+    indirectSortArg_t arg1 = {base : base, pool : pool, cnt : n1, cmp : cmp};
+    indirectSortArg_t arg2 = {base : (base + n1), pool : pool, cnt : n2, cmp : cmp};
 
     indirectSort((void*)&arg1), indirectSort((void*)&arg2);
     indirectMerge(base, n1, n2, pool, cmp);
@@ -156,17 +152,17 @@ void slowSort(void *base, size_t cnt, size_t size, compare_t cmp) {
         indirectSortArg_t args[MAX_THREAD_NUM];
         size_t per = cnt / MAX_THREAD_NUM, rem = cnt % MAX_THREAD_NUM;
         args[0] = (indirectSortArg_t) {
-            .base = tp, 
-            .pool = (void**)tmp, 
-            .cnt = (per + rem), 
-            .cmp = cmp
+            base : tp, 
+            pool : (void**)tmp, 
+            cnt : (per + rem), 
+            cmp : cmp
         };
         for(size_t i = 1; i < MAX_THREAD_NUM; i++) {
             args[i] = (indirectSortArg_t) {
-                .base = tp + rem + i * per, 
-                .pool = (void**)tmp + rem + i * per, 
-                .cnt = per, 
-                .cmp = cmp
+                base : tp + rem + i * per, 
+                pool : (void**)tmp + rem + i * per, 
+                cnt : per, 
+                cmp : cmp
             };
         }
         for(size_t i = 0; i < MAX_THREAD_NUM; i++)
@@ -176,9 +172,11 @@ void slowSort(void *base, size_t cnt, size_t size, compare_t cmp) {
             }
         for(size_t i = 0; i < MAX_THREAD_NUM; i++)
             if(~pid[i]) pthread_join(pid[i], NULL);
-        for(size_t it = 1, tot = per + rem; it < MAX_THREAD_NUM; it++) {
-            indirectMerge(tp, tot, per, (void**)tmp, cmp);
-            tot += per;
+        for(size_t lth = 1; lth < MAX_THREAD_NUM; lth <<= 1) {
+            for(size_t i = 0, j = lth; j < MAX_THREAD_NUM; i += lth * 2, j += lth * 2) {
+                indirectMerge(args[i].base, args[i].cnt, args[j].cnt, (void**)tmp, cmp);
+                args[i].cnt += args[j].cnt;
+            }
         }
 
         pointer_t kp;
@@ -201,19 +199,19 @@ void slowSort(void *base, size_t cnt, size_t size, compare_t cmp) {
         directSortArg_t args[MAX_THREAD_NUM];
         size_t per = cnt / MAX_THREAD_NUM, rem = cnt % MAX_THREAD_NUM;
         args[0] = (directSortArg_t) {
-            .base = base, 
-            .pool = tmp, 
-            .cnt = (per + rem), 
-            .size = size, 
-            .cmp = cmp
+            base : base, 
+            pool : tmp, 
+            cnt : (per + rem), 
+            size : size, 
+            cmp : cmp
         };
         for(size_t i = 1; i < MAX_THREAD_NUM; i++) {
             args[i] = (directSortArg_t) {
-                .base = (base + (rem + i * per) * size), 
-                .pool = (tmp + (rem + i * per) * size), 
-                .cnt = per, 
-                .size = size, 
-                .cmp = cmp
+                base : (base + (rem + i * per) * size), 
+                pool : (tmp + (rem + i * per) * size), 
+                cnt : per, 
+                size : size, 
+                cmp : cmp
             };
         }
         for(size_t i = 0; i < MAX_THREAD_NUM; i++)
@@ -223,9 +221,11 @@ void slowSort(void *base, size_t cnt, size_t size, compare_t cmp) {
             }
         for(size_t i = 0; i < MAX_THREAD_NUM; i++)
             if(~pid[i]) pthread_join(pid[i], NULL);
-        for(size_t it = 1, tot = per + rem; it < MAX_THREAD_NUM; it++) {
-            directMerge(base, tot, per, size, tmp, cmp);
-            tot += per;
+        for(size_t lth = 1; lth < MAX_THREAD_NUM; lth <<= 1) {
+            for(size_t i = 0, j = lth; j < MAX_THREAD_NUM; i += lth * 2, j += lth * 2) {
+                directMerge(args[i].base, args[i].cnt, args[j].cnt, size, tmp, cmp);
+                args[i].cnt += args[j].cnt;
+            }
         }
     }
     free(tmp);
