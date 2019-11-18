@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <pthread.h>
+
 #define SWAP(a, b, size)                \
     do {                                \
         COPY(swapBuffer, (a), size);    \
@@ -20,7 +22,7 @@ int my_log2(int x) {
     return ret;
 }
 
-static inline void myHeapSort(void *base, size_t nmemb, int size,
+void myHeapSort(void *base, size_t nmemb, int size,
                                 int (*compar)(const void *, const void *),
                                 void *swapBuffer) {
     if (nmemb <= 1) return;
@@ -44,7 +46,7 @@ static inline void myHeapSort(void *base, size_t nmemb, int size,
     }
 }
 
-static inline void myInsertionSort(void *base, size_t nmemb, size_t size,
+void myInsertionSort(void *base, size_t nmemb, size_t size,
                                      int (*compar)(const void *, const void *),
                                      void *swapBuffer) {
     void *tmpBuf = malloc(size), *rlim = base + (nmemb * size);
@@ -65,6 +67,24 @@ static inline void myInsertionSort(void *base, size_t nmemb, size_t size,
     if (tmpBuf != NULL) free(tmpBuf);
 }
 
+int checkSpecialSeq(void *base, size_t nmemb, size_t size,
+                       int (*compar)(const void *, const void *)) {
+    int reverseNum = 0, eqNum = 0;
+    for (void *i = base, *Rlim = base + (nmemb - 1) * size; i < Rlim; i += size) {
+        int res = compar(i, i + size);
+        if (res > 0) ++reverseNum;
+        if (res == 0) ++eqNum;
+    }
+    if (!reverseNum) return 1;
+    if (reverseNum + eqNum + 1 == nmemb) return -1; 
+    return 0;
+}
+
+void reverseSequence(void *base, size_t nmemb, size_t size, void *swapBuffer) {
+    for (int i = 0; i < (nmemb >> 1); ++i)
+        SWAP(base + i * size, base + (nmemb - 1 - i) * size, size);
+}
+#define CHECK_SPECIAL_THRESHOLD 50
 void myIntroSort(void *base, size_t nmemb, size_t size,
                        int (*compar)(const void *, const void *), int depLim,
                        void *swapBuffer) {
@@ -118,23 +138,13 @@ void myIntroSort(void *base, size_t nmemb, size_t size,
     myInsertionSort(base, nmemb, size, compar, swapBuffer);
 }
 
-void reverseSequence(void *base, size_t nmemb, size_t size, void *swapBuffer) {
-    for (int i = 0; i < (nmemb >> 1); ++i)
-        SWAP(base + i * size, base + (nmemb - 1 - i) * size, size);
-}
-
-void Qsort(void *base, size_t nmemb, size_t size,
+void _Qsort(void *base, size_t nmemb, size_t size,
               int (*compar)(const void *, const void *)) {
     if (nmemb <= 1) return;
-    int reverseNum = 0, eqNum = 0;
-    for (void *i = base, *Rlim = base + (nmemb - 1) * size; i < Rlim; i += size) {
-        int res = compar(i, i + size);
-        if (res > 0) ++reverseNum;
-        if (res == 0) ++eqNum;
-    }
-    if (!reverseNum) return;
     void *swapBuffer = malloc(size);
-    if (reverseNum + eqNum + 1 == nmemb) {
+    int seqSt = checkSpecialSeq(base, nmemb, size, compar);
+    if(seqSt == 1) return;
+    else if(seqSt == -1) {
         reverseSequence(base, nmemb, size, swapBuffer);
         return;
     }
@@ -142,5 +152,79 @@ void Qsort(void *base, size_t nmemb, size_t size,
                       swapBuffer);
     free(swapBuffer);
 }
+typedef struct qsort_args_t{
+	void *base;
+	size_t nmemb;
+	size_t size;
+	int (*compar)(const void *, const void *);
+}qsort_args_t;
+#define PTH_THRES 8
+pthread_barrier_t mypthreadBarrier;
+
+void* workThread(void *args) {
+	qsort_args_t *arg = (qsort_args_t *)args; 
+	_Qsort(arg -> base, arg -> nmemb, arg -> size, arg -> compar);
+	pthread_barrier_wait(&mypthreadBarrier);
+    pthread_exit(NULL);
+}
+
+void mergeSeq(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) {
+	void *arr = malloc(size * nmemb);
+	void *begin[PTH_THRES], *end[PTH_THRES];
+	begin[0] = base;
+	for(int i = 1; i < PTH_THRES; ++i) begin[i] = begin[i - 1] + size * (nmemb / PTH_THRES);
+	for(int i = 0; i < PTH_THRES; ++i) {
+		if(i < PTH_THRES - 1) end[i] = begin[i + 1];
+		else end[i] = begin[i] + (nmemb - (nmemb / PTH_THRES) * (PTH_THRES - 1)) * size;
+	}
+	void *curElem = malloc(size);
+	for(int i = 0; i < nmemb; ++i) {
+		int tidx = -1;
+		for(int j = 0; j < PTH_THRES; ++j) if(begin[j] < end[j]) {
+			if(~tidx) {
+				if(compar(begin[tidx], begin[j]) > 0) tidx = j;
+			}
+			else tidx = j;
+		}
+		COPY(arr + i * size, begin[tidx], size);
+		begin[tidx] += size;
+	}
+	memcpy(base, arr, size * nmemb);
+	free(curElem);
+	free(arr);
+}
+
+void Qsort(void *base, size_t nmemb, size_t size,
+              int (*compar)(const void *, const void *)) {
+    if (nmemb <= 1) return;
+	void *swapBuffer = malloc(size);
+    int seqSt = checkSpecialSeq(base, nmemb, size, compar);
+    if(seqSt == 1) return;
+    else if(seqSt == -1) {
+        reverseSequence(base, nmemb, size, swapBuffer);
+        return;
+    }
+    free(swapBuffer);
+	qsort_args_t arg[PTH_THRES];
+	int blockLen = nmemb / PTH_THRES, curEnd = 0, totElem = nmemb;
+	for(int i = 0; i < PTH_THRES; ++i) {
+		arg[i].base = base + curEnd * size;
+		arg[i].nmemb = (i == PTH_THRES - 1) ? totElem : blockLen;
+		arg[i].size = size;
+		arg[i].compar = compar;
+		curEnd += blockLen, totElem -= blockLen;
+	}
+	pthread_t tid;
+	pthread_barrier_init(&mypthreadBarrier, NULL, PTH_THRES + 1);
+	for(int i = 0; i < PTH_THRES; ++i) {
+		pthread_create(&tid, NULL, workThread, (void *) &arg[i]);
+	}
+	pthread_barrier_wait(&mypthreadBarrier);
+	
+	mergeSeq(base, nmemb, size, compar);
+	
+}
+
+
 
 #endif
