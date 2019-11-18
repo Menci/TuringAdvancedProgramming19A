@@ -1,10 +1,9 @@
-#ifndef _MY_QSORT_H_
-#define _MY_QSORT_H_
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <sys/sysinfo.h>
 
 #define SWAP(a, b, size)                \
     do {                                \
@@ -158,8 +157,9 @@ typedef struct qsort_args_t{
 	size_t size;
 	int (*compar)(const void *, const void *);
 }qsort_args_t;
-#define PTH_THRES 8
-pthread_barrier_t mypthreadBarrier;
+int MY_THREAD;
+#define _MAX_THREAD 64
+static pthread_barrier_t mypthreadBarrier;
 
 void* workThread(void *args) {
 	qsort_args_t *arg = (qsort_args_t *)args; 
@@ -170,17 +170,18 @@ void* workThread(void *args) {
 
 void mergeSeq(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) {
 	void *arr = malloc(size * nmemb);
-	void *begin[PTH_THRES], *end[PTH_THRES];
+	void *begin[_MAX_THREAD], *end[_MAX_THREAD];
 	begin[0] = base;
-	for(int i = 1; i < PTH_THRES; ++i) begin[i] = begin[i - 1] + size * (nmemb / PTH_THRES);
-	for(int i = 0; i < PTH_THRES; ++i) {
-		if(i < PTH_THRES - 1) end[i] = begin[i + 1];
-		else end[i] = begin[i] + (nmemb - (nmemb / PTH_THRES) * (PTH_THRES - 1)) * size;
+	for(int i = 1; i < MY_THREAD; ++i) 
+        begin[i] = begin[i - 1] + size * (nmemb / MY_THREAD);
+	for(int i = 0; i < MY_THREAD; ++i) {
+		if(i < MY_THREAD - 1) end[i] = begin[i + 1];
+		else end[i] = begin[i] + (nmemb - (nmemb / MY_THREAD) * (MY_THREAD - 1)) * size;
 	}
 	void *curElem = malloc(size);
 	for(int i = 0; i < nmemb; ++i) {
 		int tidx = -1;
-		for(int j = 0; j < PTH_THRES; ++j) if(begin[j] < end[j]) {
+		for(int j = 0; j < MY_THREAD; ++j) if(begin[j] < end[j]) {
 			if(~tidx) {
 				if(compar(begin[tidx], begin[j]) > 0) tidx = j;
 			}
@@ -205,26 +206,22 @@ void Qsort(void *base, size_t nmemb, size_t size,
         return;
     }
     free(swapBuffer);
-	qsort_args_t arg[PTH_THRES];
-	int blockLen = nmemb / PTH_THRES, curEnd = 0, totElem = nmemb;
-	for(int i = 0; i < PTH_THRES; ++i) {
+    MY_THREAD = get_nprocs_conf();
+    MY_THREAD > _MAX_THREAD ? MY_THREAD = _MAX_THREAD : 0;
+	qsort_args_t arg[_MAX_THREAD];
+	int blockLen = nmemb / MY_THREAD, curEnd = 0, totElem = nmemb;
+	for(int i = 0; i < MY_THREAD; ++i) {
 		arg[i].base = base + curEnd * size;
-		arg[i].nmemb = (i == PTH_THRES - 1) ? totElem : blockLen;
+		arg[i].nmemb = (i == MY_THREAD - 1) ? totElem : blockLen;
 		arg[i].size = size;
 		arg[i].compar = compar;
 		curEnd += blockLen, totElem -= blockLen;
 	}
 	pthread_t tid;
-	pthread_barrier_init(&mypthreadBarrier, NULL, PTH_THRES + 1);
-	for(int i = 0; i < PTH_THRES; ++i) {
+	pthread_barrier_init(&mypthreadBarrier, NULL, MY_THREAD + 1);
+	for(int i = 0; i < MY_THREAD; ++i) {
 		pthread_create(&tid, NULL, workThread, (void *) &arg[i]);
 	}
 	pthread_barrier_wait(&mypthreadBarrier);
-	
 	mergeSeq(base, nmemb, size, compar);
-	
 }
-
-
-
-#endif

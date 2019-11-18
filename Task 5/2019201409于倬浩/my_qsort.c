@@ -1,5 +1,3 @@
-#ifndef _MY_QSORT_H_
-#define _MY_QSORT_H_
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -150,5 +148,3 @@ void Qsort(void *base, size_t nmemb, size_t size,
                       swapBuffer);
     free(swapBuffer);
 }
-
-#endif
