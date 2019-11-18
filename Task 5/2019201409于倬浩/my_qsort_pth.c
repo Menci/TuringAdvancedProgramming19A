@@ -213,9 +213,8 @@ void Qsort(void *base, size_t nmemb, size_t size,
     }
     pthread_t tid;
     pthread_barrier_init(&mypthreadBarrier, NULL, MY_THREAD + 1);
-    for(int i = 0; i < MY_THREAD; ++i) {
+    for(int i = 0; i < MY_THREAD; ++i) 
         pthread_create(&tid, NULL, workThread, (void *) &arg[i]);
-    }
     pthread_barrier_wait(&mypthreadBarrier);
     mergeSeq(base, nmemb, size, compar);
 }
