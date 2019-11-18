@@ -243,22 +243,7 @@ void my_bucket_sort(void *A, size_t n, size_t s, int (*cmp)(const void *, const 
 			crt ++;
 		}
 	
-	free(times);free(ord);free(all);
+	free(times);
+	free(ord);
+	free(all);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
