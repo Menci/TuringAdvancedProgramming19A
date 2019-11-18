@@ -140,65 +140,59 @@ void _Qsort(void *base, size_t nmemb, size_t size,
               int (*compar)(const void *, const void *)) {
     if (nmemb <= 1) return;
     void *swapBuffer = malloc(size);
-    int seqSt = checkSpecialSeq(base, nmemb, size, compar);
-    if(seqSt == 1) return;
-    else if(seqSt == -1) {
-        reverseSequence(base, nmemb, size, swapBuffer);
-        return;
-    }
     myIntroSort(base, nmemb, size, compar, my_log2(nmemb) << 1,
                       swapBuffer);
     free(swapBuffer);
 }
 
 typedef struct qsort_args_t{
-	void *base;
-	size_t nmemb;
-	size_t size;
-	int (*compar)(const void *, const void *);
+    void *base;
+    size_t nmemb;
+    size_t size;
+    int (*compar)(const void *, const void *);
 }qsort_args_t;
 static int MY_THREAD;
 static pthread_barrier_t mypthreadBarrier;
 
 void* workThread(void *args) {
-	qsort_args_t *arg = (qsort_args_t *)args; 
-	_Qsort(arg -> base, arg -> nmemb, arg -> size, arg -> compar);
-	pthread_barrier_wait(&mypthreadBarrier);
+    qsort_args_t *arg = (qsort_args_t *)args; 
+    _Qsort(arg -> base, arg -> nmemb, arg -> size, arg -> compar);
+    pthread_barrier_wait(&mypthreadBarrier);
     pthread_exit(NULL);
 }
 
 void mergeSeq(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) {
     if(MY_THREAD < 2) return;
-	void *arr = malloc(size * nmemb);
-	void *begin[_MAX_THREAD], *end[_MAX_THREAD];
-	begin[0] = base;
-	for(int i = 1; i < MY_THREAD; ++i) 
+    void *arr = malloc(size * nmemb);
+    void *begin[_MAX_THREAD], *end[_MAX_THREAD];
+    begin[0] = base;
+    for(int i = 1; i < MY_THREAD; ++i) 
         begin[i] = begin[i - 1] + size * (nmemb / MY_THREAD);
-	for(int i = 0; i < MY_THREAD; ++i) {
-		if(i < MY_THREAD - 1) end[i] = begin[i + 1];
-		else end[i] = begin[i] + (nmemb - (nmemb / MY_THREAD) * (MY_THREAD - 1)) * size;
-	}
-	void *curElem = malloc(size);
-	for(int i = 0; i < nmemb; ++i) {
-		int tidx = -1;
-		for(int j = 0; j < MY_THREAD; ++j) if(begin[j] < end[j]) {
-			if(~tidx) {
-				if(compar(begin[tidx], begin[j]) > 0) tidx = j;
-			}
-			else tidx = j;
-		}
-		COPY(arr + i * size, begin[tidx], size);
-		begin[tidx] += size;
-	}
-	memcpy(base, arr, size * nmemb);
-	free(curElem);
-	free(arr);
+    for(int i = 0; i < MY_THREAD; ++i) {
+        if(i < MY_THREAD - 1) end[i] = begin[i + 1];
+        else end[i] = begin[i] + (nmemb - (nmemb / MY_THREAD) * (MY_THREAD - 1)) * size;
+    }
+    void *curElem = malloc(size);
+    for(int i = 0; i < nmemb; ++i) {
+        int tidx = -1;
+        for(int j = 0; j < MY_THREAD; ++j) if(begin[j] < end[j]) {
+            if(~tidx) {
+                if(compar(begin[tidx], begin[j]) > 0) tidx = j;
+            }
+            else tidx = j;
+        }
+        COPY(arr + i * size, begin[tidx], size);
+        begin[tidx] += size;
+    }
+    memcpy(base, arr, size * nmemb);
+    free(curElem);
+    free(arr);
 }
 
 void Qsort(void *base, size_t nmemb, size_t size,
               int (*compar)(const void *, const void *)) {
     if (nmemb <= 1) return;
-	void *swapBuffer = malloc(size);
+    void *swapBuffer = malloc(size);
     int seqSt = checkSpecialSeq(base, nmemb, size, compar);
     if(seqSt == 1) return;
     else if(seqSt == -1) {
@@ -208,20 +202,20 @@ void Qsort(void *base, size_t nmemb, size_t size,
     free(swapBuffer);
     MY_THREAD = get_nprocs_conf();
     MY_THREAD > _MAX_THREAD ? MY_THREAD = _MAX_THREAD : 0;
-	qsort_args_t arg[_MAX_THREAD];
-	int blockLen = nmemb / MY_THREAD, curEnd = 0, totElem = nmemb;
-	for(int i = 0; i < MY_THREAD; ++i) {
-		arg[i].base = base + curEnd * size;
-		arg[i].nmemb = (i == MY_THREAD - 1) ? totElem : blockLen;
-		arg[i].size = size;
-		arg[i].compar = compar;
-		curEnd += blockLen, totElem -= blockLen;
-	}
-	pthread_t tid;
-	pthread_barrier_init(&mypthreadBarrier, NULL, MY_THREAD + 1);
-	for(int i = 0; i < MY_THREAD; ++i) {
-		pthread_create(&tid, NULL, workThread, (void *) &arg[i]);
-	}
-	pthread_barrier_wait(&mypthreadBarrier);
+    qsort_args_t arg[_MAX_THREAD];
+    int blockLen = nmemb / MY_THREAD, curEnd = 0, totElem = nmemb;
+    for(int i = 0; i < MY_THREAD; ++i) {
+        arg[i].base = base + curEnd * size;
+        arg[i].nmemb = (i == MY_THREAD - 1) ? totElem : blockLen;
+        arg[i].size = size;
+        arg[i].compar = compar;
+        curEnd += blockLen, totElem -= blockLen;
+    }
+    pthread_t tid;
+    pthread_barrier_init(&mypthreadBarrier, NULL, MY_THREAD + 1);
+    for(int i = 0; i < MY_THREAD; ++i) {
+        pthread_create(&tid, NULL, workThread, (void *) &arg[i]);
+    }
+    pthread_barrier_wait(&mypthreadBarrier);
     mergeSeq(base, nmemb, size, compar);
 }
