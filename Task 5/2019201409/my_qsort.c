@@ -1,12 +1,12 @@
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#define SWAP(a, b, size)                \
-    do {                                \
-        COPY(swapBuffer, (a), size);    \
-        COPY((a), (b), size);           \
-        COPY((b), swapBuffer, size);    \
+#define SWAP(a, b, size)             \
+    do {                             \
+        COPY(swapBuffer, (a), size); \
+        COPY((a), (b), size);        \
+        COPY((b), swapBuffer, size); \
     } while (0)
 
 #define COPY(a, b, size) memcpy((a), (b), (size))
@@ -19,8 +19,8 @@ int my_log2(int x) {
 }
 
 static inline void myHeapSort(void *base, size_t nmemb, int size,
-                                int (*compar)(const void *, const void *),
-                                void *swapBuffer) {
+                              int (*compar)(const void *, const void *),
+                              void *swapBuffer) {
     if (nmemb <= 1) return;
     void *begin = base - size;
     for (int i = nmemb >> 1; i >= 1; --i) {
@@ -43,20 +43,17 @@ static inline void myHeapSort(void *base, size_t nmemb, int size,
 }
 
 static inline void myInsertionSort(void *base, size_t nmemb, size_t size,
-                                     int (*compar)(const void *, const void *),
-                                     void *swapBuffer) {
+                                   int (*compar)(const void *, const void *),
+                                   void *swapBuffer) {
     void *tmpBuf = malloc(size), *rlim = base + (nmemb * size);
     for (void *i = base + size; i < rlim; i = i + size) {
         void *j = i - size;
         COPY(tmpBuf, i, size);
-        if(compar(base, tmpBuf) > 0) {
-            for(j; j >= base; j -= size) 
-                COPY(j + size, j, size);
+        if (compar(base, tmpBuf) > 0) {
+            for (j; j >= base; j -= size) COPY(j + size, j, size);
             COPY(base, tmpBuf, size);
-        }
-        else {
-            for(j; compar(j, tmpBuf) > 0; j -= size) 
-                COPY(j + size, j, size);
+        } else {
+            for (j; compar(j, tmpBuf) > 0; j -= size) COPY(j + size, j, size);
             COPY(j + size, tmpBuf, size);
         }
     }
@@ -64,15 +61,16 @@ static inline void myInsertionSort(void *base, size_t nmemb, size_t size,
 }
 
 static inline int checkSpecialSeq(void *base, size_t nmemb, size_t size,
-                       int (*compar)(const void *, const void *)) {
+                                  int (*compar)(const void *, const void *)) {
     int reverseNum = 0, eqNum = 0;
-    for (void *i = base, *Rlim = base + (nmemb - 1) * size; i < Rlim; i += size) {
+    for (void *i = base, *Rlim = base + (nmemb - 1) * size; i < Rlim;
+         i += size) {
         int res = compar(i, i + size);
         if (res > 0) ++reverseNum;
         if (res == 0) ++eqNum;
     }
     if (!reverseNum) return 1;
-    if (reverseNum + eqNum + 1 == nmemb) return -1; 
+    if (reverseNum + eqNum + 1 == nmemb) return -1;
     return 0;
 }
 
@@ -82,8 +80,8 @@ void reverseSequence(void *base, size_t nmemb, size_t size, void *swapBuffer) {
 }
 
 void myIntroSort(void *base, size_t nmemb, size_t size,
-                       int (*compar)(const void *, const void *), int depLim,
-                       void *swapBuffer) {
+                 int (*compar)(const void *, const void *), int depLim,
+                 void *swapBuffer) {
     if (nmemb <= 1) return;
     void *tmpBuf = malloc(size);
     while (nmemb > INTRO_LOWER_BOUND) {
@@ -125,8 +123,8 @@ void myIntroSort(void *base, size_t nmemb, size_t size,
                 frontPtr = frontPtr + size;
             }
             medianPos = ((frontPtr - base) / size);
-            myIntroSort(base + (medianPos * size), nmemb - medianPos, size, compar, depLim,
-                              swapBuffer);
+            myIntroSort(base + (medianPos * size), nmemb - medianPos, size,
+                        compar, depLim, swapBuffer);
             nmemb = medianPos;
         }
     }
@@ -135,16 +133,16 @@ void myIntroSort(void *base, size_t nmemb, size_t size,
 }
 
 void Qsort(void *base, size_t nmemb, size_t size,
-              int (*compar)(const void *, const void *)) {
+           int (*compar)(const void *, const void *)) {
     if (nmemb <= 1) return;
     void *swapBuffer = malloc(size);
     int seqSt = checkSpecialSeq(base, nmemb, size, compar);
-    if(seqSt == 1) return;
-    else if(seqSt == -1) {
+    if (seqSt == 1)
+        return;
+    else if (seqSt == -1) {
         reverseSequence(base, nmemb, size, swapBuffer);
         return;
-    } 
-    myIntroSort(base, nmemb, size, compar, my_log2(nmemb) << 1,
-                      swapBuffer);
+    }
+    myIntroSort(base, nmemb, size, compar, my_log2(nmemb) << 1, swapBuffer);
     free(swapBuffer);
 }
