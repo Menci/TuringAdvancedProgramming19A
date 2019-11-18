@@ -10,36 +10,19 @@ void my_introsort_loop(void *, size_t, size_t, int (*)(const void *, const void 
 void* my_median(void *, void *, void *, int (*)(const void *,const void *));
 void* my_partition(void *, size_t, size_t, int(*)(const void *, const void *));
 void my_heap_sort(void *, size_t, size_t, int(*)(const void *, const void *));
-void my_booble_sort(void *, size_t, size_t, int(*)(const void *, const void *));
+bool my_booble_sort(void *, size_t, size_t, int(*)(const void *, const void *), int);
+void my_bucket_sort(void *, size_t, size_t, int(*)(const void *, const void *));
 
 void my_sort(void *A, size_t n, size_t s, int (*cmp)(const void *, const void *))
 {
-	void *lt = A, *rt = A + (n - 1) * s, *tmp = malloc(s);
-	int i;
-	while(lt < rt)
+	if(s <= 2)
 	{
-		if(cmp(lt, rt) > 0)
-		{
-			memcpy(tmp, lt, s);
-			memcpy(lt, rt, s);
-			memcpy(rt, tmp, s);
-		}
-		lt += s;
-		rt -= s;
+		my_bucket_sort(A, n, s ,cmp);
+		return ; 
 	}
 	
-	bool flag = true;
-	for(i = 0; i + 1 < n; ++i)
-		if(cmp(A + i * s, A + (i + 1) * s) > 0)
-		{
-			flag = false;
-			memcpy(tmp, A + i * s, s);
-			memcpy(A + i * s, A + (i + 1) * s, s);
-			memcpy(A + (i + 1) * s, tmp, s); 
-		}
-	if(flag) return ;
-	
-	free(tmp);
+	if(my_booble_sort(A, n, s, cmp, 1))
+		return ;
 	
 	my_introsort_loop(A, n, s, cmp, 30);
 }
@@ -70,7 +53,7 @@ void my_introsort_loop(void *A, size_t n, size_t s, int (*cmp)(const void *, con
 		my_introsort_loop(cut, n - (cut - A) / s, s, cmp, depth_limit);
 		n=(cut - A) / s;
 	}
-	my_booble_sort(A, n, s, cmp); 
+	my_booble_sort(A, n, s, cmp, n); 
 	
 	free(tmp);
 }
@@ -128,33 +111,7 @@ void my_heap_sort(void *A, size_t n, size_t s, int(*cmp)(const void *, const voi
 	int left, right, index, maxIndex;
 	void *tmp = malloc(s);
 	
-	void *lt = A, *rt = A + (n - 1) * s;
-	while(lt < rt)
-	{
-		if(cmp(lt, rt) > 0)
-		{
-			memcpy(tmp, lt, s);
-			memcpy(lt, rt, s);
-			memcpy(rt, tmp, s);
-		}
-		lt += s;
-		rt -= s;
-	}
-	
-	bool flag = true;
-	for(i = 0; i + 1 < n; ++i)
-		if(cmp(A + i * s, A + (i + 1) * s) > 0)
-		{
-			flag = false;
-			memcpy(tmp, A + i * s, s);
-			memcpy(A + i * s, A + (i + 1) * s, s);
-			memcpy(A + (i + 1) * s, tmp, s); 
-		}
-	if(flag)
-	{
-		free(tmp);
-		return ;
-	}
+	my_booble_sort(A, n, s, cmp, 1);
 	
 	for(i = n / 2 - 1; i >= 0; --i)
 	{
@@ -207,7 +164,7 @@ void my_heap_sort(void *A, size_t n, size_t s, int(*cmp)(const void *, const voi
 	free(tmp);
 }
 
-void my_booble_sort(void *A, size_t n, size_t s, int(*cmp)(const void *, const void *))
+bool my_booble_sort(void *A, size_t n, size_t s, int(*cmp)(const void *, const void *), int round)
 {
 	int i, j;
 	void *tmp = malloc(s);
@@ -226,7 +183,7 @@ void my_booble_sort(void *A, size_t n, size_t s, int(*cmp)(const void *, const v
 	}
 	
 	bool flag = true;
-	for(j = n; j >= 2 ; --j)
+	for(j = n; j >= 2 && round--; --j)
 	{
 		flag = true;
 		for(i = 0; i + 1 < j; ++i)
@@ -240,9 +197,68 @@ void my_booble_sort(void *A, size_t n, size_t s, int(*cmp)(const void *, const v
 		if(flag)
 		{
 			free(tmp);
-			return ;
+			return flag;
 		}
 	}
 	
 	free(tmp);
+	
+	return flag;
 }
+
+void my_bucket_sort(void *A, size_t n, size_t s, int (*cmp)(const void *, const void *))
+{
+	int *times = calloc(1 << (s << 3), sizeof(int)), *ord = calloc(1 << (s << 3), sizeof(int));
+	void *all = calloc(1 << (s << 3), s);
+	int i, j, tmp;
+	
+	for(i = 0; i < (1 << (s << 3)); i++)
+		for(j = 0; j < s; j++)
+			*(unsigned char *)(all + i * s + j) = *(unsigned char *)(&i + j);
+	my_heap_sort(all, 1 << (s << 3), s, cmp);
+	
+	for(i = 0; i < (1 << (s << 3)); i++)
+	{
+		tmp = 0;
+		for(j = 0; j < s; j++)
+			*(unsigned char *)(&tmp + j) = *(unsigned char *)(all + i * s + j);
+		ord[tmp] = i;
+	}
+	
+	memset(times, 0, sizeof(times));
+	for(i = 0; i < n; i++)
+	{
+		tmp = 0;
+		for(j = 0; j < s; j++)
+			*(unsigned char *)(&tmp + j) = *(unsigned char *)(A + i * s + j);
+		
+		times[ord[tmp]] ++;
+	}
+	
+	int crt = 0;
+	for(i = 0; i < (1 << (s << 3)); i++)
+		for(j = 0; j < times[i]; j++)
+		{
+			memcpy(A + crt * s, all + i * s, s);
+			crt ++;
+		}
+	
+	free(times);free(ord);free(all);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
