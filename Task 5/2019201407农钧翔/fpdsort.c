@@ -23,10 +23,10 @@ void quicksort(void *head, void *tail, size_t size, int (*cmp)(const void *, con
     memcpy(pivot, head, size);
     while (leftptr < rightptr)
     {
-        while (leftptr < rightptr && cmp(pivot, rightptr) <= 0)
+        while (leftptr < rightptr && cmp(pivot, rightptr) < 0)
             rightptr -= size;
         memcpy(leftptr, rightptr, size);
-        while (leftptr < rightptr && cmp(pivot, leftptr) >= 0)
+        while (leftptr < rightptr && cmp(pivot, leftptr) > 0)
             leftptr += size;
         memcpy(rightptr, leftptr, size);
     }
