@@ -8,13 +8,13 @@
 const int sort_threshold = 16;
 
 uint32_t SA = 23333, SB = 66666, SC = 233333;
-inline uint32_t rnd(int l, int r) {
+uint32_t rnd(int l, int r) {
 	SA ^= SA << 16; SA ^= SA >> 5; SA ^= SA << 1;
 	uint32_t t = SA; SA = SB;
 	SB = SC; SC ^= t ^ SA;
 	return SC % (r - l + 1) + l;
 }
-inline void swap(void *a, void *b, size_t size) {
+void swap(void *a, void *b, size_t size) {
 	int i, x = size >> 3, y = size % 8;
 	for(i = 0; i < x; ++i) {
 		long long t = *((long long*)a + i);
@@ -29,7 +29,7 @@ inline void swap(void *a, void *b, size_t size) {
 	}
 	return; 
 }
-inline void copy(void *a, void *b, size_t size) {
+void copy(void *a, void *b, size_t size) {
 	int i, x = size >> 3, y = size % 8;
 	for(i = 0; i < x; ++i)
 		*((long long*)a + i) = *((long long*)b + i);
@@ -39,7 +39,7 @@ inline void copy(void *a, void *b, size_t size) {
 	return; 
 }
 
-inline void build_heap(void *base, int l, int n, int p, size_t size, int (*compar)(const void *, const void *)) {
+void build_heap(void *base, int l, int n, int p, size_t size, int (*compar)(const void *, const void *)) {
 	void *tmp = (void*) malloc(size);
 	copy(tmp, val(p + l - 1), size);
 	int i;
@@ -65,7 +65,7 @@ void partial_sort(void *base, int l, int r, size_t size, int (*compar)(const voi
 	return;
 }
 
-inline void insertion_sort(void *base, int l, int r, size_t size, int (*compar)(const void *, const void *)) {
+void insertion_sort(void *base, int l, int r, size_t size, int (*compar)(const void *, const void *)) {
 	if(l >= r) return;
 	int i, j;
 	void *tmp = (void*) malloc(size);
