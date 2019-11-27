@@ -9,6 +9,7 @@ int a[1005], n;
 
 void quicksort(void *head, void *tail, size_t size, int (*cmp)(const void *, const void *), void *tmp)
 {
+    int flag;
     if (tail < head + (size << 2))
     {
         void *ptr;
@@ -23,11 +24,19 @@ void quicksort(void *head, void *tail, size_t size, int (*cmp)(const void *, con
     memcpy(pivot, head, size);
     while (leftptr < rightptr)
     {
-        while (leftptr < rightptr && cmp(pivot, rightptr) <= 0)
+        while (leftptr < rightptr) {
+            flag = cmp(pivot, rightptr);
+            if(flag > 0) break;
             rightptr -= size;
+            if(flag == 0) break;
+        }
         memcpy(leftptr, rightptr, size);
-        while (leftptr < rightptr && cmp(pivot, leftptr) >= 0)
+        while (leftptr < rightptr) {
+            flag = cmp(pivot, leftptr);
+            if(flag < 0) break;
             leftptr += size;
+            if(flag == 0) break;
+        }
         memcpy(rightptr, leftptr, size);
     }
     memcpy(leftptr, pivot, size);
