@@ -151,11 +151,11 @@ inline void check(size_t dataSize, RNG &rng, qsort_t qsortFunction) {
               << DataType::NAME
               << TerminalColor::Reset
               << std::endl;
-    checkForType<DataType, DataCaseRandom>(dataSize, rng, qsort);
-    checkForType<DataType, DataCaseSorted>(dataSize, rng, qsort);
-    checkForType<DataType, DataCaseReverseSorted>(dataSize, rng, qsort);
-    checkForType<DataType, DataCaseAlternately>(dataSize, rng, qsort);
-    checkForType<DataType, DataCaseAllSame>(dataSize, rng, qsort);
+    checkForType<DataType, DataCaseRandom>(dataSize, rng, qsortFunction);
+    checkForType<DataType, DataCaseSorted>(dataSize, rng, qsortFunction);
+    checkForType<DataType, DataCaseReverseSorted>(dataSize, rng, qsortFunction);
+    checkForType<DataType, DataCaseAlternately>(dataSize, rng, qsortFunction);
+    checkForType<DataType, DataCaseAllSame>(dataSize, rng, qsortFunction);
 }
 
 int main(int argc, char *argv[]) {
@@ -174,7 +174,6 @@ int main(int argc, char *argv[]) {
         std::cerr << "Can't get function, error: " << dlerror() << std::endl;
         return 1;
     }
-    qsortFunction = &qsort;
 
     // Initialize RNG
     uint64_t seed = arguments.seed;
