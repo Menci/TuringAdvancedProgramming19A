@@ -1,4 +1,4 @@
-//op = 0 À≥ ±’Î£¨op = 1 ƒÊ ±’Î 
+//op = 0 clockwise, op = 1 anti-clockwise 
 #include <stdio.h>
 
 typedef struct list* node;
