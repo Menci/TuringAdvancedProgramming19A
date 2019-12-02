@@ -1,0 +1,18 @@
+static int N , K , tow ;
+
+static void solve( Node *nd ){
+	Node *nxt ;
+	for( int i = 1 ; i < N ; i ++ ){
+		if( tow ) nxt = find_kpre( nd , K ) ;
+		else nxt = find_knxt( nd , K ) ;
+		printf( "%d\n" , nxt->id ) ;
+		nd = nxt ;'
+	}
+}
+
+int main(){
+	LST A ;
+	scanf( "%d%d" , &N , &K , &tow ) ;
+	LST_init( A , N ) ;
+	solve( A.st[1] ) ;
+}
