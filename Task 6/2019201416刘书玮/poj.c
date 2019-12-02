@@ -19,12 +19,12 @@ void solve(int n,int m,int ord)
 	for(i = 1; i <= n; i ++)
 	{
 		if(i == 1){
-			if(ord == 1) now = _dll_find(now, m - 1);
-			else now = _reverse_dll_find(now, m - 1);
-		}
-		else{
 			if(ord == 1) now = _dll_find(now, m);
 			else now = _reverse_dll_find(now, m);
+		}
+		else{
+			if(ord == 1) now = _dll_find(now, m + 1);
+			else now = _reverse_dll_find(now, m + 1);
 		}
 		printf("%d\n", _dll_getv(now));
 		
