@@ -16,7 +16,7 @@ operate.o:operate.c
 build.o:build.c	build.h
 	gcc -c build.c 
 
-cmd.o:cmd.c	cmd.h
+cmd.o:cmd.c cmd.h
 	gcc -c cmd.c
 
 clean:
