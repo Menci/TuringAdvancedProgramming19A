@@ -9,5 +9,5 @@ data.o: data.h
 linkedlist.o: linkedlist.h
 	gcc -c linkedlist.c
 clean:
-	rm mem.o data.o linkedlist.o main.o JosephusProblem
+	rm -f mem.o data.o linkedlist.o main.o JosephusProblem
 	
