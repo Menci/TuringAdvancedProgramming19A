@@ -1,13 +1,10 @@
-#ifndef In_p
-#define In_p
-
 #include<stdio.h>
+#include "Leaves.h"
 
 void In();
 int type , n , k ;
-extern void CreatNew( int data );
-extern void Endlink();
-#endif
+
+
 
 
 void In()

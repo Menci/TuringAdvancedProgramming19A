@@ -1,9 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
-extern void init();
-extern void In();
-extern void Move();
-extern void Prt();
+#include "Leaves.h"
+
 int main()
 {
 	init();
