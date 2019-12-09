@@ -1,0 +1,4 @@
+采用动态库进行编译。
+testdata.in和testdata.out为LOJ 107的第二个测试数据。
+执行 make，将RB_Tree.c编译成动态库RB_Tree.so，并在编译主程序时使用动态库。
+执行 make clean，删除所有过程中生成的文件、可执行文件及答案文件。
