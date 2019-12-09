@@ -7,4 +7,4 @@ splay.so : splay.c splay.h
 my_malloc.o : malloc.h my_malloc.c
 	gcc -c my_malloc.c
 clean :
-	rm main *.o
+	rm main *.o *.so
