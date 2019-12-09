@@ -4,7 +4,7 @@ You need to use GNU make to complie my code:
 	'$ cd "Task 7/2019201422李林豇/"'
 	'$ make'
 ```
-And now you have got a dynamic library named "libtreap.so" which provides enables you to use Treap.
+And now you have got a dynamic library named "libtreap.so" which enables you to use Treap.
 
 I advise you to use GNU make to run the code(unless you know what you are doing):
 ```sh
