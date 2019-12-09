@@ -1,0 +1,15 @@
+采用Compile Time打桩技术
+testdata.in和testdata.out为LOJ 107的第二个测试数据
+执行sh Check.sh 生成的ans.out为程序读入数据生成的答案，test.out为malloc和free中的调试信息，并调用checker进行判断。若无内存泄漏输出Correct;否则输出Wrong。
+
+若要去掉调试信息，则把makefile改成如下即可：
+Solve:Solve.o RB_Tree.o mymalloc.o RB_Tree.h malloc.h
+	gcc  -o Solve Solve.o RB_Tree.o mymalloc.o
+Solve.o:Solve.c RB_Tree.h
+	gcc  -c Solve.c
+RB_Tree.o:RB_Tree.c RB_Tree.h malloc.h
+	gcc -c RB_Tree.c
+mymalloc.o:mymalloc.c
+	gcc -DCOMPILETIME -c mymalloc.c
+clean:
+	rm *.o Solve
