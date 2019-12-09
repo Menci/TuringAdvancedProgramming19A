@@ -3,202 +3,202 @@
 #define malloc my_malloc 
 #define free my_free
 
-static void update(t_node *tmp)
+static void update(t_node *now_node)
 {
-	tmp->siz = (tmp->lc==NULL ? 0:tmp->lc->siz) + (tmp->rc==NULL ? 0:tmp->rc->siz) + tmp->cnt;
+	now_node->siz = (now_node->lc==NULL ? 0:now_node->lc->siz) + (now_node->rc==NULL ? 0:now_node->rc->siz) + now_node->cnt;
 }
 
 static t_node *new_node()
 {
-	t_node *tmp = (t_node*)malloc(sizeof(t_node));
-	tmp->lc = tmp->rc = NULL;
-	tmp->siz = tmp->cnt = 1;
-	tmp->rnd = rand();
-	return tmp;
+	t_node *now_node = (t_node*)malloc(sizeof(t_node));
+	now_node->lc = now_node->rc = NULL;
+	now_node->siz = now_node->cnt = 1;
+	now_node->rnd = rand();
+	return now_node;
 }
 
-static void free_node(t_node* tmp)
+static void free_node(t_node* now_node)
 {
-	free(tmp->data);
-	free((void*)tmp);
+	free(now_node->data);
+	free((void*)now_node);
 }
 
-static void rotate(t_node **tmp, int k)
+static void rotate(t_node **now_node, int k)
 {
-	t_node *v = (*tmp)->son[k^1];
-	(*tmp)->son[k^1] = v->son[k];
-	v->son[k]= (*tmp);
-	update((*tmp));
-	update((*tmp) = v);
+	t_node *v = (*now_node)->son[k^1];
+	(*now_node)->son[k^1] = v->son[k];
+	v->son[k]= (*now_node);
+	update((*now_node));
+	update((*now_node) = v);
 }
 
-static void insert(t_node **tmp,const void *key, cmp_pointer comp, int width)
+static void insert(t_node **now_node,const void *key, cmp_pointer comp, int width)
 {
-	if((*tmp) == NULL)
+	if((*now_node) == NULL)
 	{
-		(*tmp) = new_node();
-		(*tmp)->data = malloc(width);
-		memcpy((*tmp)->data, key, width);
+		(*now_node) = new_node();
+		(*now_node)->data = malloc(width);
+		memcpy((*now_node)->data, key, width);
 		return;
 	}
-	if(!comp(key, (*tmp)->data))
+	if(!comp(key, (*now_node)->data))
 	{
-		++(*tmp)->siz;
-		++(*tmp)->cnt;
+		++(*now_node)->siz;
+		++(*now_node)->cnt;
 		return;
 	}
-	int d = comp(key, (*tmp)->data) > 0;
-	++(*tmp)->siz;
-	insert(&((*tmp)->son[d]), key, comp, width);
-	if((*tmp)->son[d]->rnd < (*tmp)->rnd)
-		rotate(tmp, d ^ 1);
+	int d = comp(key, (*now_node)->data) > 0;
+	++(*now_node)->siz;
+	insert(&((*now_node)->son[d]), key, comp, width);
+	if((*now_node)->son[d]->rnd < (*now_node)->rnd)
+		rotate(now_node, d ^ 1);
 	return;
 }
 
-static bool del(t_node **tmp, const void *key, cmp_pointer comp)
+static bool del(t_node **now_node, const void *key, cmp_pointer comp)
 {
-	if((*tmp)==NULL)
+	if((*now_node)==NULL)
 		return false;
-	if(!comp(key, (*tmp)->data))
+	if(!comp(key, (*now_node)->data))
 	{
-		if((*tmp)->cnt > 1)
+		if((*now_node)->cnt > 1)
 		{
-			--(*tmp)->cnt;
-			--(*tmp)->siz;
+			--(*now_node)->cnt;
+			--(*now_node)->siz;
 			return true;
 		}
-		if((*tmp)->lc==NULL || (*tmp)->rc==NULL)
+		if((*now_node)->lc==NULL || (*now_node)->rc==NULL)
 		{
 			t_node* temp;
-			temp = (*tmp)->lc == NULL ? (*tmp)->rc : (*tmp)->lc;
-			free_node(*tmp);
-			*tmp = temp;
+			temp = (*now_node)->lc == NULL ? (*now_node)->rc : (*now_node)->lc;
+			free_node(*now_node);
+			*now_node = temp;
 			return true;
 		}
-		if((*tmp)->lc->rnd < (*tmp)->rc->rnd)
-			rotate(tmp, 1);
+		if((*now_node)->lc->rnd < (*now_node)->rc->rnd)
+			rotate(now_node, 1);
 		else
-			rotate(tmp, 0);
-		return del(tmp, key, comp);
+			rotate(now_node, 0);
+		return del(now_node, key, comp);
 	}
-	int d = comp(key, (*tmp)->data) > 0;
-	if(!del(&((*tmp)->son[d]), key, comp))
+	int d = comp(key, (*now_node)->data) > 0;
+	if(!del(&((*now_node)->son[d]), key, comp))
 		return false;
-	--(*tmp)->siz;
+	--(*now_node)->siz;
 	return true;
 }
 
-static void* find_key(t_node *tmp, int rnk, cmp_pointer comp)
+static void* find_key(t_node *now_node, int rnk, cmp_pointer comp)
 {
-	if(tmp->siz < rnk)
+	if(now_node->siz < rnk)
 		return NULL;
 	while(1)
 	{
-		if(rnk > (tmp->lc==NULL ? 0:tmp->lc->siz) + tmp->cnt)
-			rnk -= (tmp->lc==NULL ? 0:tmp->lc->siz) + tmp->cnt, tmp = tmp->rc;
+		if(rnk > (now_node->lc==NULL ? 0:now_node->lc->siz) + now_node->cnt)
+			rnk -= (now_node->lc==NULL ? 0:now_node->lc->siz) + now_node->cnt, now_node = now_node->rc;
 		else
 		{
-			if(rnk <= (tmp->lc==NULL ? 0:tmp->lc->siz))
-				tmp = tmp->lc;
+			if(rnk <= (now_node->lc==NULL ? 0:now_node->lc->siz))
+				now_node = now_node->lc;
 			else
-				return tmp->data;
+				return now_node->data;
 		}
 	}
 }
 
-static int find_rnk(t_node *tmp, const void *key, cmp_pointer comp)
+static int find_rnk(t_node *now_node, const void *key, cmp_pointer comp)
 {
 	int rnk = 0;
-	while(tmp != NULL)
+	while(now_node != NULL)
 	{
-		if(!comp(key, tmp->data))
-			return rnk + (tmp->lc==NULL ? 0:tmp->lc->siz);
-		if(comp(key, tmp->data) > 0)
-			rnk += (tmp->lc==NULL ? 0:tmp->lc->siz) + tmp->cnt, tmp = tmp->rc;
+		if(!comp(key, now_node->data))
+			return rnk + (now_node->lc==NULL ? 0:now_node->lc->siz);
+		if(comp(key, now_node->data) > 0)
+			rnk += (now_node->lc==NULL ? 0:now_node->lc->siz) + now_node->cnt, now_node = now_node->rc;
 		else
-			tmp = tmp->lc;
+			now_node = now_node->lc;
 	}
 	return rnk;
 }
 
 
-static void* find_pre(t_node *tmp, const void* key, cmp_pointer comp)
+static void* find_pre(t_node *now_node, const void* key, cmp_pointer comp)
 {
 	void* pre = NULL;
-	while(tmp != NULL)
+	while(now_node != NULL)
 	{
-		if(comp(key, tmp->data)<=0)
-			tmp = tmp->lc;
+		if(comp(key, now_node->data)<=0)
+			now_node = now_node->lc;
 		else
-			pre = tmp->data, tmp = tmp->rc;
+			pre = now_node->data, now_node = now_node->rc;
 	}
 	return pre;
 }
 
-static void* find_nxt(t_node *tmp, const void* key, cmp_pointer comp)
+static void* find_nxt(t_node *now_node, const void* key, cmp_pointer comp)
 {
 	void* nxt = NULL;
-	while(tmp != NULL)
+	while(now_node != NULL)
 	{
-		if(comp(key, tmp->data)>=0)
-			tmp = tmp->rc;
+		if(comp(key, now_node->data)>=0)
+			now_node = now_node->rc;
 		else
-			nxt = tmp->data, tmp = tmp->lc;
+			nxt = now_node->data, now_node = now_node->lc;
 	}
 	return nxt;
 }
 
-static void free_tree(t_node *tmp)
+static void free_tree(t_node *now_node)
 {
-	if(tmp==NULL)
+	if(now_node==NULL)
 		return;
-	free(tmp->data);
-	free_tree(tmp->lc);
-	free_tree(tmp->rc);
-	free(tmp);
+	free(now_node->data);
+	free_tree(now_node->lc);
+	free_tree(now_node->rc);
+	free(now_node);
 }
 
 Treap* Treap_build(cmp_pointer comp, int width)
 {
-	Treap* tmp = malloc(sizeof(Treap));
-	tmp->comp = comp;
-	tmp->root = NULL;
-	tmp->width = width;
-	return tmp;
+	Treap* my_treap = malloc(sizeof(Treap));
+	my_treap->comp = comp;
+	my_treap->root = NULL;
+	my_treap->width = width;
+	return my_treap;
 }
 
-void Treap_insert(Treap *tmp, void* key)
+void Treap_insert(Treap *my_treap, void* key)
 {
-	insert(&(tmp->root), key, tmp->comp, tmp->width);
+	insert(&(my_treap->root), key, my_treap->comp, my_treap->width);
 }
 
-bool Treap_delete(Treap *tmp, void* key)
+bool Treap_delete(Treap *my_treap, void* key)
 {
-	return del(&(tmp->root), key, tmp->comp);
+	return del(&(my_treap->root), key, my_treap->comp);
 }
 
-void* Treap_find_data(Treap *tmp, int rnk)
+void* Treap_find_data(Treap *my_treap, int rnk)
 {
-	return find_key(tmp->root, rnk, tmp->comp);
+	return find_key(my_treap->root, rnk, my_treap->comp);
 }
 
-int Treap_find_rnk(Treap *tmp, void* key)
+int Treap_find_rnk(Treap *my_treap, void* key)
 {
-	return find_rnk(tmp->root, key, tmp->comp);
+	return find_rnk(my_treap->root, key, my_treap->comp);
 }
 
-void* Treap_find_pre(Treap *tmp, void* key)
+void* Treap_find_pre(Treap *my_treap, void* key)
 {
-	return find_pre(tmp->root, key, tmp->comp);
+	return find_pre(my_treap->root, key, my_treap->comp);
 }
 
-void* Treap_find_nxt(Treap *tmp, void* key)
+void* Treap_find_nxt(Treap *my_treap, void* key)
 {
-	return find_nxt(tmp->root, key, tmp->comp);
+	return find_nxt(my_treap->root, key, my_treap->comp);
 }
 
-void* Treap_free(Treap *tmp)
+void* Treap_free(Treap *my_treap)
 {
-	free_tree(tmp->root);
-	free(tmp);
+	free_tree(my_treap->root);
+	free(my_treap);
 }
