@@ -4,6 +4,7 @@
 
 int main()
 {
+	openfile();
 	int n;
 	scanf("%d", &n);
 
@@ -12,6 +13,7 @@ int main()
 		solve(my_treap);
 
 	Treap_free(my_treap);
+	check_memory();
 	return 0;
 }
 

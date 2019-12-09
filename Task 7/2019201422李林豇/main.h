@@ -10,6 +10,8 @@ extern int Treap_find_rnk(Treap *tmp, void* key);
 extern void* Treap_find_pre(Treap *tmp, void* key);
 extern void* Treap_find_nxt(Treap *tmp, void* key);
 extern void* Treap_free(Treap *tmp);
+extern void openfile();
+extern void check_memory();
 
 static void solve(Treap* my_treap);
 int comp(const void* a, const void *b);

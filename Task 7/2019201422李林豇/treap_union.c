@@ -226,6 +226,7 @@ void* Treap_find_nxt(Treap *tmp, void* key)
 void* Treap_free(Treap *tmp)
 {
 	free_tree(tmp->root);
+	free(tmp);
 }
 
 int main()

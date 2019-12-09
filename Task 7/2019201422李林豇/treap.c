@@ -1,4 +1,7 @@
 #include"treap.h"
+#include"malloc.c"
+#define malloc my_malloc 
+#define free my_free
 
 static void update(t_node *tmp)
 {
@@ -197,4 +200,5 @@ void* Treap_find_nxt(Treap *tmp, void* key)
 void* Treap_free(Treap *tmp)
 {
 	free_tree(tmp->root);
+	free(tmp);
 }
