@@ -11,6 +11,7 @@ struct _splay
 	int size;
 	struct _node *root;
 };
+extern void _splay_destory(struct _splay*);
 extern struct _splay* _splay_build();
 extern void _splay_insert(struct _splay*, int);
 extern void _splay_erase (struct _splay*, int);

@@ -1,4 +1,6 @@
 #include<stdlib.h>
+#include<stdio.h>
+#include<malloc.h>
 #define TYPE int
 
 struct _node
@@ -25,7 +27,7 @@ struct _splay
 
 struct _splay* _splay_build()
 {
-	//build a empty tree
+	//build an empty tree
 	
 	struct _splay* tmp = (struct _splay*)malloc(sizeof(struct _splay));
 	tmp-> size = 0;
@@ -45,9 +47,9 @@ void _splay_clear(struct _node *p)
 	free(p);
 }
 
-void _splay_destory(struct _splay *p)
+void _splay_destory_empty(struct _splay *p)
 {
-	//destory the tree
+	//destory an empty tree
 	
 	p->size = 0;
 	p->root = NULL;
@@ -218,7 +220,7 @@ void _splay_erase(struct _splay *T, int a)
 	}
 	else if((T-> root)-> child[1] == NULL && (T-> root)-> child[0] == NULL){
 		_splay_clear(T-> root);
-		_splay_destory(T);
+		_splay_destory_empty(T);
 	}
 	else if((T-> root)-> child[1] == NULL){
 		struct _node *tmp = T->root;
@@ -241,5 +243,17 @@ void _splay_erase(struct _splay *T, int a)
 		_splay_clear(tmp);
 		_splay_update(T->root);
 	}
+	return;
 }
 
+void _splay_destory(struct _splay *p)
+{
+	//destory the full tree
+	
+	while(p-> root != NULL){
+		_splay_erase(p, (p-> root)-> value);
+		p-> size --;
+	}
+	p-> root = NULL;
+	return;
+}

@@ -40,4 +40,6 @@ int main(){
 				break;
 		}
 	}
+	_splay_destory(T);
+	return 0;
 }
