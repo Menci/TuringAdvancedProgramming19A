@@ -52,7 +52,6 @@ bool left_node(node *operant) {
 
 void rotate(node *operant) {
 	node *father = operant -> pre;
-	// node *grand_father = father -> pre;
 	int Is_left_node = left_node(operant);
 
 	if(father -> pre != NULL) {
@@ -66,7 +65,6 @@ void rotate(node *operant) {
 	operant -> pre = father -> pre;
 	father -> pre = operant;
 
-	//fprintf(stderr, "left side %d\n", left_node(operant));
 	if(Is_left_node) {
 		if(operant -> right != NULL)
 			operant -> right -> pre = father;
@@ -91,9 +89,7 @@ void splay(node *operant) {
 
 		}
 
-		//fprintf(stderr, "splaying enter ? now = %d\n", operant -> value);
 		rotate(operant);
-		//printf("%d rotate successfully!\n", operant -> value);
 	}
 	Head = operant;
 }
@@ -104,7 +100,6 @@ void Insert(int operant, node *current, node *father) {
 
         current = (node *)malloc( sizeof(node) );
         current -> value = operant;
-        //printf("%d\n", operant);
         current -> cnt = current -> size = 1;
         current -> left = current -> right = NULL;
         current -> pre = father;
@@ -117,12 +112,8 @@ void Insert(int operant, node *current, node *father) {
                 father -> right = current;
 
         }
-        // fprintf(stderr, "left side %d\n", left_node(current));
         maintain(current);
-        // fprintf(stderr, "now= %d\n", current -> value);
         splay(current);
-        // fprintf(stderr,"*");
-        //printf("Insert %d completed!\n", operant);
         return;
     }
 
@@ -132,7 +123,6 @@ void Insert(int operant, node *current, node *father) {
         (current -> cnt) ++;
         maintain(current);
         splay(current);
-        //printf("Insert %d completed!\n", operant);
         return;
     }
 
@@ -141,7 +131,6 @@ void Insert(int operant, node *current, node *father) {
     }
 
     if(operant > value) {
-    //    fprintf(stderr," operant = %d value = %d\n", operant, value);
         Insert(operant, current -> right, current);
     }
 }
@@ -181,7 +170,6 @@ void delete(int operant, node *current) {
         splay(current);
         if(current -> cnt == 0)
             delete_node(current);
-        //printf("delete %d completed!\n", operant);
         return;
     }
     else if(operant < value) {
@@ -214,7 +202,6 @@ int find_total_min(int operant, node *current) {
     else {
         int total_left = 0;
         if(current -> left) total_left = current -> left -> size;
-        //printf("total = %d\n", count(current));
         return total_left + count(current) + find_total_min(operant, current -> right);
     }
 }

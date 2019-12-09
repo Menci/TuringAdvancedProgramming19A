@@ -36,11 +36,9 @@ int main() {
 	int option = 0, operant;
 	for(int i = 1; i <= n; i++) {
 		scanf("%d%d", &option, &operant);
-		//printf("# %d : %d\n", i, operant);
 		switch(option) {
 
-			case INSERT: 
-		//fprintf(stderr,"%d", Head == NULL);
+			case INSERT:
 				Insert(operant, Head, NULL);
 				break;
 			case DELETE:
@@ -61,7 +59,6 @@ int main() {
 
 		}
 	}
-//	print(Head);
 
 	clean(Head);
 	return 0;
