@@ -10,7 +10,7 @@ Splay.so: Splay.c
 	cc -I. -shared -fPIC -o Splay.so Splay.c
 
 clean:
-	rm edit mycode.o Solve.o Splay.so 
+	rm edit mycode.o Solve.o Splay.so mymalloc.o
 
 
 

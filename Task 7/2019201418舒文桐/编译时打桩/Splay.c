@@ -227,8 +227,9 @@ void D( struct node *now )
 }
 void clean()
 {
-	free( null ); 
 	D( root );
+	free( null ); 
+	
 }
 void init()
 {
