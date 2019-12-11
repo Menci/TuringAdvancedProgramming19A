@@ -1,0 +1,10 @@
+main : main.o splay.o my_malloc.o
+	gcc -o main main.o splay.o my_malloc.o
+main.o : main.c splay.c splay.h malloc.h
+	gcc -c main.c 
+splay.o : splay.c splay.h
+	gcc -I. -c splay.c
+my_malloc.o : malloc.h my_malloc.c
+	gcc -DCOMPILE_TIME -c my_malloc.c
+clean :
+	rm main *.o
