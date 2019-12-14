@@ -1,5 +1,4 @@
 #include<stdio.h>
-
 extern struct _dll_node *_dll_build(int);
 extern struct _dll_node *_dll_find(struct _dll_node *, int);
 extern struct _dll_node *_reverse_dll_find(struct _dll_node *, int);
