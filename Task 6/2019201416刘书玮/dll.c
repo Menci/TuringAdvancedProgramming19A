@@ -62,8 +62,8 @@ struct _dll_node* _reverse_dll_find(struct _dll_node *_start, int _count)
 
 void _dll_delete(struct _dll_node *_pla)
 {
-	//delete the appointed node in list
-	//get next address
+	// delete the appointed node in list
+	// get next address
 	
 	if(_head == _pla) _head = (*_pla)._next;
 	if(_tail == _pla) _tail = (*_pla)._pren;
