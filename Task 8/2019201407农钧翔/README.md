@@ -15,6 +15,7 @@ $ ./zip [options] [data_size] [filename]
 
 第一个参数 [options] 有以下可行的选项 :
 > -z 代表压缩
+
 > -e 代表解压
 
 其中第二个参数 [data_size] 为无前导零的正整数，代表原问题中的 `K`，即数据大小;
