@@ -13,7 +13,7 @@ $ make
 $ ./zip [options] [data_size] [filename]
 ```
 
-第一个参数 `[options]` 有以下可行的选项 :
+第一个参数 [options] 有以下可行的选项 :
 > -z 代表压缩
 > -e 代表解压
 
