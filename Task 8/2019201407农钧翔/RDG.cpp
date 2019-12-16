@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const int K = 6;
+const int K = 21;
 const int N = 1e6 + 5;
 
 struct node {

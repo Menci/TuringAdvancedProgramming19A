@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 int main(int argc, char *argv[]) {
     int hash_val;
@@ -44,8 +45,16 @@ int main(int argc, char *argv[]) {
         printf("Error : err_id = 0x%x\n", err_flag);
     }
     else {
-        if(strcmp(argv[1], "-z") == 0) 
+        if(strcmp(argv[1], "-z") == 0) {
             printf("zipped successfully.\n");
+            struct stat stbuf;
+            stat(input_file, &stbuf);
+            long original_size = stbuf.st_size;
+            stat(output_file, &stbuf);
+            long zipped_size = stbuf.st_size;
+            printf("original_size = %ld, zipped_size = %ld\nzip rate = %lf\n", 
+                original_size, zipped_size, 1.0 * zipped_size / original_size);
+        }
         if(strcmp(argv[1], "-e") == 0)
             printf("extracted successfully.\n");
         printf("hash_id = 0x%x\n", hash_val);
