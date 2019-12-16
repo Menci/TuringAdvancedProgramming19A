@@ -3,27 +3,32 @@
 #include "encode.h"
 #include "decode.h"
 #include <stdio.h>
+#include <stdlib.h>
 int main(int argc, char *argv[]) {
-	if(argc != 2) {
+	if(argc != 3) {
 		printf("Invalid Argument.\n");
 		return 1;
 	}
 	int oper = atoi(argv[1]);
 	if(oper == 0) { // Encode
-		int n, outsize;
-		node *in = (node *)readOriginal(&n);
+		size_t n, outsize;
+		node *in = readOriginal(&n, argv[2]);
 		void *out = encodeStructToArray(in, &outsize, n);
+		printf("[Compress] zipped.bin = %d Bytes\n", outsize);
 		writeCompressed(out, outsize);
 		free(in);
 		free(out);
 		return 0;
 	}
 	else if(oper == 1) { // Decode & Check
-		int n, insize;
+		size_t n, insize;
 		void *in = readCompressed(&insize);
-		node *my = decodeArrayToStruct(in, insize);
+		node *std = readOriginal(&n, argv[2]);
+		node *my = decodeArrayToStruct(in, insize / (K + 1));
 		free(in);
+		checkStructure(std, my);
 		free(my);
+		printf("[Decompress] Check Passed!\n");
 		return 0;
 	}
 	else {

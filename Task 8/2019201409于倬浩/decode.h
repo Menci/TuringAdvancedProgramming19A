@@ -2,5 +2,6 @@
 #define _DECODE_H_
 #include "tree.h"
 #include <stddef.h>
-void* decodeArrayToStruct(void *, size_t);
+int decodeDFS();
+node* decodeArrayToStruct(void *, size_t);
 #endif

@@ -1,9 +1,17 @@
-gen : gen.c
-	gcc -O2 gen.c -o gen -Dk=3
+all_obj = main.o tree.o decode.o encode.o fileio.o
 
-decode : decode.h decode.c
-	gcc -O2 -o decode.o -c decode.c
-encode : encode.h encode.c
-	gcc -O2 -o encode.o -c encode.c
-fileio : fileio.h fileio.c
-	gcc -O2 -o fileio.o -c fileio.c
+converter : $(all_obj) tree.h
+	gcc -O2 -o converter $(all_obj) -DK=${K} -w
+main.o : main.c tree.h
+	gcc -O2 -c main.c -DK=${K} -w
+tree.o : tree.h tree.c
+	gcc -O2 -c tree.c -DK=${K} -w
+decode.o : decode.h decode.c tree.h
+	gcc -O2 -c decode.c -DK=${K} -w
+encode.o : encode.h encode.c tree.h
+	gcc -O2 -c encode.c -DK=${K} -w
+fileio.o : fileio.h fileio.c tree.h
+	gcc -O2 -c fileio.c -DK=${K} -w
+
+clean : 
+	-rm $(all_obj) converter

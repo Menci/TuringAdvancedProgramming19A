@@ -2,6 +2,6 @@
 #define _ENCODE_H_
 #include "tree.h"
 #include <stddef.h>
+void encodeDFS(int);
 void* encodeStructToArray(node *, size_t *, size_t);
-void* compressArray(void *);
 #endif
