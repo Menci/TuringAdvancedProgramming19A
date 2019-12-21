@@ -10,4 +10,3 @@ linkedlist.o: linkedlist.h linkedlist.c
 	gcc -c linkedlist.c
 clean:
 	rm -f mem.o data.o linkedlist.o main.o JosephusProblem
-	
