@@ -224,3 +224,43 @@ void hulffman_encode(node *tree, int root, size_t n, FILE *output)
 
 	free(buc), free(table), free(trace), free(compressed);
 }
+
+void hulffman_decode(int code_num, code_table *table, FILE *compressed, FILE *output)
+{
+	int n;
+	fread(&n, sizeof(int), 1, compressed);
+	uchar *buffer = (uchar *)malloc(sizeof(uchar) * n);
+	fread(buffer, sizeof(uchar), (n>>3) + 1, compressed);
+
+	int i = 0, now ;
+	for (i = 0; i < n; ++i)
+	{
+		now = read(buffer, i);
+		int HTcur, cur;
+		int HTcurweight, HTcurlchild, HTcurchild;
+		char codecode_len;
+		if (HTcurweight == 0)
+		{
+			HTcurweight = 1;
+			if (HTcurlchild != -1)
+			{  
+				codecode_len = '0';
+				cur = HTcurlchild;
+			}
+			else
+			{
+				codecode_len = '\0';
+				if (HTcur)
+				{
+					if (HTcurlchild != -1)
+					{  
+						codecode_len = '0';
+						cur = HTcurlchild;
+					}
+				}
+			}
+		}
+	}
+
+	fwrite(buffer, sizeof(uchar), (n>>3) + 1, output);
+}

@@ -11,5 +11,6 @@ typedef struct code_table
 void dfs_hulffman(int *, int *, int, code_table *, int);
 int dfs_tree(node *, int, int *, uchar *, int);
 void hulffman_encode(node *, int, size_t, FILE *);
+void hulffman_decode(int, code_table *, FILE *, FILE *);
 
 #endif

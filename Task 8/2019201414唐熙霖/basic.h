@@ -16,5 +16,6 @@ typedef struct node
 
 size_t calc_file_size(FILE *);
 void fill(uchar *, int, int);
+int read(uchar *, int);
 
 #endif

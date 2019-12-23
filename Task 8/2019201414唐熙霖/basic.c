@@ -16,3 +16,10 @@ void fill(uchar *buffer, int bit, int val)
 	buffer[i] &= (UCHAR_MAX ^ (1 << bit));
 	buffer[i] |= (val << bit);
 }
+
+int read(uchar *buffer, int bit)
+{
+	int i = bit >> 3;
+	bit &= 7;
+	return (buffer[i] >> bit) & 1;
+}

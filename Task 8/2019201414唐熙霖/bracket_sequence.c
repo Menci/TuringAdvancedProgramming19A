@@ -52,6 +52,32 @@ void get_brckt_seq(node *tree, int root, size_t n, FILE *output)
 	free(buffer);
 }
 
+void decode_brckt_seq(int n, char *seq, FILE *output)
+{
+	int block_num = (n>>3) + 1;
+	int *stk = (int *)malloc(sizeof(int) * n);
+	bool *book = (bool *)calloc(n, sizeof(bool));
+	node *tree =  (node *)malloc(sizeof(node) * n);
+	int top = 0, now = 0;
+
+	int i;
+	for (i = 0; i < n; ++i)
+	{
+		int opt = read(seq, i);
+		if (opt == 0)
+			stk[++top] = now++;
+		else
+		{
+			top--;
+			if (top)
+				book[stk[top]] ? (tree[stk[top]].rs = stk[top+1]) : \
+				(tree[stk[top]].ls = stk[top-1]);
+		}
+	}
+
+	fwrite(stk, sizeof(uchar), n, output);
+}
+
 void get_weight(node *tree, int u, FILE *output)
 {
 	fwrite(tree[u].w, sizeof(uchar), K, output);
