@@ -15,14 +15,14 @@ int main(int argc, char *argv[]) {
 		node *in = readOriginal(&n, argv[2]);
 		void *out = encodeStructToArray(in, &outsize, n);
 		printf("[Compress] zipped.bin = %d Bytes\n", outsize);
-		writeCompressed(out, outsize);
+		writeCoded(out, outsize);
 		free(in);
 		free(out);
 		return 0;
 	}
 	else if(oper == 1) { // Decode & Check
 		size_t n, insize;
-		void *in = readCompressed(&insize);
+		void *in = readCoded(&insize);
 		node *std = readOriginal(&n, argv[2]);
 		node *my = decodeArrayToStruct(in, insize / (K + 1));
 		free(in);

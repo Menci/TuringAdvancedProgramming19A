@@ -16,7 +16,7 @@ void encodeDFS(int x) {
     if(tr[x].right_child != -1) encodeDFS(tr[x].right_child);
 }
 void* encodeStructToArray(node *s, size_t *size, size_t n) {
-    stack = malloc((K + 1) * n);
+    stack = malloc(2 * (K + 1) * n);
     memset(stack, 0, (K + 1) * n);
     tr = s;
     void *begin = (void *)stack;

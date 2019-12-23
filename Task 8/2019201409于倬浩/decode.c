@@ -18,7 +18,7 @@ int decodeDFS() {
     return curidx;
 }
 node* decodeArrayToStruct(void *s, size_t n) { 
-    tr = malloc(n * sizeof(node));
+    tr = malloc(2 * n * sizeof(node));
     stack = (uint8_t *)s;
     node *begin = tr;
     decodeDFS();
