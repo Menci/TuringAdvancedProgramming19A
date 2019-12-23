@@ -64,7 +64,7 @@ void print_ratios(char *input, char *output)
 
 int cmpsize(char *input, char* output)
 {
-	return file_size(input) > file_size(output);
+	return (file_size(input) > file_size(output)) && file_size(output)>100000;
 }
 
 void syscmd(char *fmt, ...)
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 	FILE* input = fopen(s, "r");
 	if(input == NULL)
 		fatal_error("Error opening %s for N and K\n", s);
-	int N, K, lzw = 1;
+	int N, K, lzw = 1, arith = 1;
 	if(fscanf(input, "#define K %d\n", &K) != 1)
 		fatal_error("Error reading K from %s\n", s);
 	if(fscanf(input, "#define N %d\n", &N) != 1)
@@ -113,19 +113,31 @@ int main(int argc, char* argv[])
 		syscmd("cp %s %s", s, t);
 	}
 	syscmd("/tmp/arith-c %s %s", t, argv[2]);
+	if(!cmpsize(t, argv[2]))
+	{
+		arith = 0;
+		syscmd("cp %s %s", t, argv[2]);
+	}
 	syscmd("rm -rf %s %s", s, t);
 	printf("\033[1;32;40m Compression Success!\033[0m\n");
 	
+//	exit(0); 
+	
 	//Expanding
-	syscmd("/tmp/arith-e %s %s", argv[2], t);
+	if(arith)
+		syscmd("/tmp/arith-e %s %s", argv[2], t);
+	else
+		syscmd("cp %s %s", argv[2], t);
 	if(lzw)
 		syscmd("/tmp/lzw-e %s %s", t, s);
 	else
 		syscmd("cp %s %s", t, s);
+	syscmd("rm -rf %s", t);
 	t[len - 2] = 'o'; t[len - 1] = 't';
 	syscmd("/tmp/tree-e %s %s", s, t);
 	printf("\033[1;32;40m Expandion Success!\033[0m\n");
 	print_ratios(argv[1], argv[2]);
+	syscmd("rm -rf %s", s);
 	
 	//Checking the struction and data of the tree by TreeStruction compressing  
 	printf("Checking\n");
