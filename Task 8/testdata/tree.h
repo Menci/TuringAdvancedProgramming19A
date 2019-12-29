@@ -25,8 +25,9 @@ using set = __gnu_pbds::tree<
 	__gnu_pbds::tree_order_statistics_node_update // Node_Update
 >;
 
-void build() {
-	std::mt19937 rng{std::random_device()()};
+void build(unsigned seed = -1u) {
+	if (seed == -1u) seed = std::random_device()();
+	std::mt19937 rng{seed};
 
 	set<std::tuple<unsigned, size_t, size_t>> freeEdges;
 	freeEdges.insert(std::make_tuple(rng(), 0, 0));

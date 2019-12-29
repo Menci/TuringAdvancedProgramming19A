@@ -29,4 +29,4 @@ Limits: the count of nodes `>= 100000`, the size of data on each node `>= 4`.
 * **Algorithm**
 
 # Deadline
-Your Pull Request should be created before December 16, 2019 23:00 (CST).
+Your Pull Request should be created before December 23, 2019 23:00 (CST).
