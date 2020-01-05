@@ -1,0 +1,4 @@
+哈夫曼压缩算法
+ToTree.c将原树结构压成括号序列存入一个二进制文件Thunder.bin
+Decompress.c是一个针对任何数据的哈夫曼压缩算法，将Thunder.bin压缩存入result.bin中
+Compress.c是哈法曼对应的解压程序，把result.bin解压为Final.bin，其内容和Thunder.bin一样

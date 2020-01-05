@@ -1,0 +1,18 @@
+1.in: compression rate: 32.19%
+2.in: compression rate: 49.39%
+3.in: compression rate: 89.42%
+4.in: compression rate: 52.36%
+5.in: compression rate: 25.80%
+6.in: compression rate: 50.55%
+7.in: compression rate: 11.46%
+8.in: compression rate: 31.63%
+
+算法：
+括号序列+哈夫曼算法
+对于树的结构，利用括号序列使得一个节点最多需要三个比特位进行表示
+对于保存的数据，将四个相邻的比特位并为一个字符进行压缩
+
+改进方向：
+1.调整参数
+2.改变实用算法
+3.常数优化
