@@ -1,3 +1,0 @@
-struct Data {
-	int id;
-};
